@@ -1,0 +1,131 @@
+from decimal import Decimal
+from rest_framework import serializers
+
+from apps.assurances.models import (
+    PolicyHolder,
+    VehicleAssurance,
+    VehicleCategory,
+    CoverageType,
+    nik_validator,
+)
+from apps.dealers.models import Dealer
+from apps.dealers.serializers import DealerSummarySerializer
+from apps.documents.serializers import AssuranceDocumentSerializer
+from apps.documents.services.vault_paths import available_document_types
+from apps.documents.services.document_validator import (
+    get_required_document_types,
+    validate_document_completeness,
+)
+
+
+class PolicyHolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PolicyHolder
+        fields = ["id", "nik", "full_name", "phone", "address", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class CalculatePremiumQuerySerializer(serializers.Serializer):
+    sum_insured = serializers.DecimalField(
+        min_value=Decimal("1000000.00"),
+        max_digits=14,
+        decimal_places=2
+    )
+    coverage_type = serializers.ChoiceField(choices=CoverageType.choices)
+    tenor_years = serializers.IntegerField(min_value=1, max_value=5, default=1)
+
+
+class AssuranceDraftCreateSerializer(serializers.Serializer):
+    policy_holder_name = serializers.CharField(max_length=100)
+    policy_holder_nik = serializers.CharField(max_length=16, validators=[nik_validator])
+    policy_holder_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    policy_holder_address = serializers.CharField(required=False, allow_blank=True)
+    dealer_id = serializers.PrimaryKeyRelatedField(
+        queryset=Dealer.objects.filter(is_active=True),
+        source="dealer"
+    )
+    vehicle_category = serializers.ChoiceField(choices=VehicleCategory.choices)
+    vehicle_object = serializers.CharField(default="Sepeda Motor", required=False)
+    coverage_type = serializers.ChoiceField(choices=CoverageType.choices)
+    sum_insured = serializers.DecimalField(
+        min_value=Decimal("1000000.00"),
+        max_digits=14,
+        decimal_places=2
+    )
+    tenor_years = serializers.IntegerField(min_value=1, max_value=5, default=1)
+    period_start = serializers.DateField()
+    issuance_year = serializers.IntegerField(required=False, min_value=1000, max_value=9999)
+
+
+class AssuranceListSerializer(serializers.ModelSerializer):
+    policy_holder_name = serializers.CharField(source="policy_holder.full_name", read_only=True)
+    policy_holder_nik = serializers.CharField(source="policy_holder.nik", read_only=True)
+    dealer_code = serializers.CharField(source="dealer.code", read_only=True)
+    dealer_name = serializers.CharField(source="dealer.name", read_only=True)
+
+    class Meta:
+        model = VehicleAssurance
+        fields = [
+            "id",
+            "assurance_number",
+            "policy_holder_name",
+            "policy_holder_nik",
+            "dealer_code",
+            "dealer_name",
+            "vehicle_category",
+            "coverage_type",
+            "sum_insured",
+            "total_premium",
+            "status",
+            "created_at",
+        ]
+
+
+class AssuranceDetailSerializer(serializers.ModelSerializer):
+    policy_holder = PolicyHolderSerializer(read_only=True)
+    dealer = DealerSummarySerializer(read_only=True)
+    documents = AssuranceDocumentSerializer(many=True, read_only=True)
+    required_documents = serializers.SerializerMethodField()
+    is_documents_complete = serializers.SerializerMethodField()
+    missing_documents = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VehicleAssurance
+        fields = [
+            "id",
+            "assurance_number",
+            "policy_holder",
+            "dealer",
+            "vehicle_category",
+            "vehicle_object",
+            "coverage_type",
+            "sum_insured",
+            "tenor_years",
+            "base_premium",
+            "admin_fee",
+            "total_premium",
+            "period_start",
+            "period_end",
+            "issuance_year",
+            "status",
+            "review_notes",
+            "created_at",
+            "updated_at",
+            "required_documents",
+            "documents",
+            "is_documents_complete",
+            "missing_documents",
+        ]
+
+    def get_required_documents(self, obj: VehicleAssurance) -> list:
+        return get_required_document_types(obj.vehicle_category)
+
+    def get_is_documents_complete(self, obj: VehicleAssurance) -> bool:
+        uploaded_types = available_document_types(obj)
+        complete, _ = validate_document_completeness(obj.vehicle_category, uploaded_types)
+        return complete
+
+    def get_missing_documents(self, obj: VehicleAssurance) -> list:
+        uploaded_types = available_document_types(obj)
+        _, missing = validate_document_completeness(obj.vehicle_category, uploaded_types)
+        return missing
