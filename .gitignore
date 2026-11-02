@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+backend/venv/
+.venv/
+*.sqlite3
+*.sqlite3-*
+backend/media/
+.verification-*/
+.env
+.env.*
+!.env.example
+!.env.postgres.example
+.local/
+node_modules/
+frontend/dist/
+docs/
