@@ -33,6 +33,12 @@ def split_shared_holders(apps, schema_editor):
             assurances.filter(pk=assurance.pk).update(policy_holder_id=clone.pk)
 
 
+def validate_pending_constraints(apps, schema_editor):
+    """Drain deferred PostgreSQL FK checks before schema changes, still atomically."""
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+
 def ensure_unique_nik(apps, schema_editor):
     holders = apps.get_model("assurances", "PolicyHolder").objects.using(schema_editor.connection.alias)
     if holders.values("nik").annotate(total=Count("pk")).filter(total__gt=1).exists():

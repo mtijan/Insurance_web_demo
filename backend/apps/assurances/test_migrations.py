@@ -1,8 +1,10 @@
 """Forward, preflight and rollback checks against disposable historical schemas."""
 from datetime import date, timedelta
+from unittest.mock import patch
 
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.recorder import MigrationRecorder
 from django.test import TransactionTestCase
 from django.utils import timezone
 
@@ -55,6 +57,21 @@ class QualityMigrationTests(TransactionTestCase):
         self.migrate(NEW)
         apps = self.migrate(OLD)
         self.assertTrue(apps.get_model("assurances", "VehicleAssurance").objects.filter(pk=identity).exists())
+
+    def test_schema_failure_rolls_back_shared_holder_split_and_migration_record(self):
+        _, holder, _ = self.legacy_data(shared=True)
+        with patch.object(connection.SchemaEditorClass, "add_constraint",
+                          side_effect=RuntimeError("synthetic schema failure")):
+            with self.assertRaisesMessage(RuntimeError, "synthetic schema failure"):
+                self.migrate(NEW)
+        apps = MigrationExecutor(connection).loader.project_state(OLD).apps
+        rows = apps.get_model("assurances", "VehicleAssurance").objects
+        self.assertEqual(rows.count(), 2)
+        self.assertEqual(set(rows.values_list("policy_holder_id", flat=True)), {holder})
+        self.assertEqual(apps.get_model("assurances", "PolicyHolder").objects.count(), 1)
+        self.assertFalse(MigrationRecorder(connection).migration_qs.filter(
+            app="assurances", name="0003_quality_integrity",
+        ).exists())
 
     def test_invalid_financial_preflight_stops_without_deleting_data(self):
         identity, _, _ = self.legacy_data(invalid=True)

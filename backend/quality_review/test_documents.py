@@ -43,6 +43,7 @@ class DocumentReviewTests(AssuranceFeatureTestCase):
         response = self.client.get(
             f"/api/v1/assurances/{assurance.pk}/documents/{document.pk}/view/",
         )
-        actual = response.status_code
-        response.close()
-        self.assertIn(actual, (400, 404))
+        self.assertIn(response.status_code, (400, 404))
+        self.assertTrue(response.closed)
+        self.assertTrue(assurance.documents.filter(pk=document.pk).exists())
+        self.assertTrue(target.is_file())

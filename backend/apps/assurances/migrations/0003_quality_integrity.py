@@ -6,7 +6,9 @@ import django.db.models.expressions
 import django.db.models.functions.math
 from django.conf import settings
 from django.db import migrations, models
-from ._quality_data import preflight, split_shared_holders, ensure_unique_nik
+from ._quality_data import (
+    preflight, split_shared_holders, ensure_unique_nik, validate_pending_constraints,
+)
 
 
 class Migration(migrations.Migration):
@@ -25,6 +27,7 @@ class Migration(migrations.Migration):
             field=models.CharField(db_index=True, max_length=16, validators=[django.core.validators.RegexValidator(message='NIK must be exactly 16 numeric digits.', regex='^[0-9]{16}$')]),
         ),
         migrations.RunPython(split_shared_holders, migrations.RunPython.noop),
+        migrations.RunPython(validate_pending_constraints, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='vehicleassurance',
             name='created_by',

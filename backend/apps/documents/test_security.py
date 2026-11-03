@@ -128,7 +128,9 @@ class DocumentSecurityTests(AssuranceFeatureTestCase):
         response = self.client.get(f"{url}{document.pk}/view/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Cache-Control"], "private, no-store")
-        response.close()
+        expected = (self.media / document.file_path).read_bytes()
+        self.assertEqual(b"".join(response.streaming_content), expected)
+        self.assertTrue(response.closed)
         self.assertIn(self.client.delete(url + "abc/").status_code, (400, 404))
 
     def test_upload_size_and_binary_validation_remain_enforced(self):
