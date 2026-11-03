@@ -46,6 +46,7 @@ def create_user(actor, data):
     user = CustomUser()
     user.set_unusable_password()
     apply_fields(user, data)
+    user.must_change_password = True
     save_user(user)
     record_audit(actor, "CREATE", "CUSTOM_USER", user.pk,
                  {"role": user.role, "is_active": user.is_active,
@@ -59,6 +60,8 @@ def update_user(actor, user, data):
     before = {name: getattr(user, name) for name in ("role", "is_active")}
     old_dealer = str(user.dealer_id) if user.dealer_id else None
     apply_fields(user, data)
+    if "password" in data:
+        user.must_change_password = True
     save_user(user)
     changes = {name: {"old": old, "new": getattr(user, name)} for name, old in before.items()}
     changes["dealer_id"] = {"old": old_dealer,

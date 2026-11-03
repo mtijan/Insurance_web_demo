@@ -12,9 +12,20 @@ from apps.assurances.services.workflow_service import (
 )
 from apps.reports.services.excel_export_service import export_assurances_excel
 from apps.users.permissions import IsAdmin, IsSuperAdmin
+from apps.reports.services.pdf_summary_service import export_summary_pdf
 
 
 class AssuranceWorkflowMixin:
+    @action(detail=True, methods=["get"], url_path="summary-pdf")
+    def summary_pdf(self, request, pk=None):
+        assurance = self.get_object()
+        content = export_summary_pdf(request.user, assurance.pk)
+        response = HttpResponse(content, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="jaminan-{assurance.pk}.pdf"'
+        response["Cache-Control"] = "private, no-store"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
     @action(detail=True, methods=["post"], url_path="submit")
     def submit(self, request, pk=None):
         assurance = submit_assurance_application(self.get_object(), request.user)
@@ -30,7 +41,7 @@ class AssuranceWorkflowMixin:
     def review(self, request, pk=None):
         assurance = review_assurance(self.get_object(), request.user, request.data)
         return Response({"success": True, "message": "Review completed successfully.",
-                         "data": AssuranceDetailSerializer(assurance).data})
+                         "data": AssuranceDetailSerializer(assurance, context=self.get_serializer_context()).data})
 
     @action(detail=False, methods=["get"], url_path="export-excel",
             permission_classes=[IsAuthenticated, IsSuperAdmin])

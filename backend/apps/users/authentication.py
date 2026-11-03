@@ -13,6 +13,18 @@ class CsrfCheck(CsrfViewMiddleware):
         return reason
 
 
+class PasswordChangeRequired(PermissionDenied):
+    default_detail = "Change your password before accessing business features."
+    default_code = "password_change_required"
+
+
+def enforce_password_state(user, request):
+    allowed = {"auth-me", "auth-logout", "auth-change-password"}
+    match = request.resolver_match
+    if user.must_change_password and (match is None or match.url_name not in allowed):
+        raise PasswordChangeRequired()
+
+
 def enforce_csrf(request):
     check = CsrfCheck(lambda request: None)
     check.process_request(request)
@@ -46,4 +58,5 @@ class RevocableJWTAuthentication(JWTAuthentication):
         require_session(token, user.pk)
         if cookie_auth:
             enforce_csrf(request)
+        enforce_password_state(user, request)
         return user, token

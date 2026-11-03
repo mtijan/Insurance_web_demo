@@ -17,7 +17,8 @@ class QualityMigrationTests(TransactionTestCase):
         self.migrate(OLD)
 
     def tearDown(self):
-        self.migrate(NEW)
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def migrate(self, targets):

@@ -20,9 +20,10 @@ class UserSummarySerializer(serializers.ModelSerializer):
             "dealer_code",
             "dealer_name",
             "is_active",
+            "must_change_password",
             "created_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = ["id", "created_at", "must_change_password"]
 
 
 class LoginSerializer(serializers.Serializer):

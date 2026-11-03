@@ -10,6 +10,7 @@ from apps.assurances.services.pricing_calculator import calculate_premium
 from apps.assurances.services.workflow_validation import require_editable, require_mutation_access
 from apps.audit.services.audit_service import record_audit
 from apps.configs.services.config_service import get_admin_fee
+from apps.assurances.services.input_validation import validate_draft_input
 
 
 def calculate_end_date(start_date: datetime.date, tenor_years: int) -> datetime.date:
@@ -53,6 +54,7 @@ def save_holder(data):
 @transaction.atomic
 def create_assurance_draft(user, data):
     validate_dealer_access_for_creation(user, data["dealer"])
+    data = validate_draft_input(data)
     fields = {key: data[key] for key in (
         "dealer", "vehicle_category", "coverage_type", "sum_insured", "period_start",
     )}
@@ -96,6 +98,7 @@ def update_assurance_draft(assurance, user, data):
     assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
     require_mutation_access(assurance, user)
     require_editable(assurance)
+    data = validate_draft_input(data)
     if "dealer" in data:
         validate_dealer_access_for_creation(user, data["dealer"])
     assurance.policy_holder = update_holder(assurance.policy_holder, data)

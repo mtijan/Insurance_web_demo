@@ -20,4 +20,6 @@ def api_exception_handler(exc, context):
         "message": message or "Validation failed for one or more fields.",
         "errors": errors,
     }
+    if getattr(exc, "default_code", None) == "password_change_required":
+        response.data["error_code"] = "PASSWORD_CHANGE_REQUIRED"
     return response

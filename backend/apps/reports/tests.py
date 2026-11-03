@@ -47,7 +47,10 @@ class ExcelExportTests(AssuranceFeatureTestCase):
         self.assertEqual(len(list(load_workbook(BytesIO(response.content)).active.values)), 1)
 
     def test_spreadsheet_formula_strings_are_text_and_nik_retains_zeros(self):
-        self.draft(policy_holder_name='=HYPERLINK("https://example.test","test")')
+        assurance = self.draft()
+        # Legacy/corrupt stored text must remain safe after the new input contract.
+        type(assurance.policy_holder).objects.filter(pk=assurance.policy_holder_id).update(
+            full_name='=HYPERLINK("https://example.test","test")')
         response = self.export()
         sheet = load_workbook(BytesIO(response.content)).active
         self.assertEqual(sheet["C2"].data_type, "s")
@@ -94,7 +97,8 @@ class ExcelExportTests(AssuranceFeatureTestCase):
         self.assertEqual(sheet["B2"].value.date(), timezone.localtime(assurance.updated_at).date())
 
     def test_invalid_xml_control_characters_are_removed_from_export(self):
-        self.draft(policy_holder_name="Test\x01Holder")
+        assurance = self.draft()
+        type(assurance.policy_holder).objects.filter(pk=assurance.policy_holder_id).update(full_name="Test\x01Holder")
         response = self.export()
         self.assertEqual(response.status_code, 200)
         sheet = load_workbook(BytesIO(response.content)).active

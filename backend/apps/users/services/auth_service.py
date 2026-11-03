@@ -28,6 +28,10 @@ def authenticate_identity(identity, password):
 
 @transaction.atomic
 def issue_session(user):
+    current = CustomUser.objects.select_for_update().get(pk=user.pk)
+    if not current.is_active or current.password != user.password:
+        raise AuthenticationFailed("Account changed. Please log in again.")
+    user = current
     refresh = RefreshToken.for_user(user)
     session = AuthSession.objects.create(
         user=user, expires_at=datetime.fromtimestamp(refresh["exp"], datetime_timezone.utc),

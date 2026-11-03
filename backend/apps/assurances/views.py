@@ -22,6 +22,7 @@ from apps.assurances.services.assurance_service import (
 )
 from apps.assurances.services.pricing_calculator import calculate_premium
 from apps.assurances.workflow_views import AssuranceWorkflowMixin
+from apps.assurances.document_batch_views import AssuranceBatchMixin
 from apps.configs.services.config_service import get_admin_fee
 from apps.documents.models import AssuranceDocument
 from apps.documents.serializers import (
@@ -34,7 +35,7 @@ from apps.documents.services.document_write_service import (
 )
 
 
-class AssuranceViewSet(AssuranceWorkflowMixin, viewsets.ModelViewSet):
+class AssuranceViewSet(AssuranceBatchMixin, AssuranceWorkflowMixin, viewsets.ModelViewSet):
     """
     ViewSet for vehicle assurance management:
     - List/Retrieve scoped by user role.
@@ -75,7 +76,7 @@ class AssuranceViewSet(AssuranceWorkflowMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         assurance = create_assurance_draft(request.user, serializer.validated_data)
-        out_serializer = AssuranceDetailSerializer(assurance)
+        out_serializer = AssuranceDetailSerializer(assurance, context=self.get_serializer_context())
         return Response({
             "success": True,
             "message": "Assurance draft created successfully.",
@@ -90,7 +91,7 @@ class AssuranceViewSet(AssuranceWorkflowMixin, viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         updated = update_assurance_draft(instance, request.user, serializer.validated_data)
-        out_serializer = AssuranceDetailSerializer(updated)
+        out_serializer = AssuranceDetailSerializer(updated, context=self.get_serializer_context())
         return Response({
             "success": True,
             "message": "Assurance draft updated successfully.",

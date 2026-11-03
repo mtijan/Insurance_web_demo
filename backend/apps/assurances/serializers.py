@@ -9,6 +9,9 @@ from apps.assurances.models import (
     nik_validator,
 )
 from apps.dealers.models import Dealer
+from apps.assurances.services.input_validation import normalize_name
+from apps.assurances.services.workflow_validation import require_editable, require_mutation_access
+from rest_framework.exceptions import APIException
 from apps.dealers.serializers import DealerSummarySerializer
 from apps.documents.serializers import AssuranceDocumentSerializer
 from apps.documents.services.vault_paths import available_document_types
@@ -36,6 +39,9 @@ class CalculatePremiumQuerySerializer(serializers.Serializer):
 
 
 class AssuranceDraftCreateSerializer(serializers.Serializer):
+    def validate_policy_holder_name(self, value):
+        return normalize_name(value)
+
     policy_holder_name = serializers.CharField(max_length=100)
     policy_holder_nik = serializers.CharField(max_length=16, validators=[nik_validator])
     policy_holder_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
@@ -45,7 +51,7 @@ class AssuranceDraftCreateSerializer(serializers.Serializer):
         source="dealer"
     )
     vehicle_category = serializers.ChoiceField(choices=VehicleCategory.choices)
-    vehicle_object = serializers.CharField(default="Sepeda Motor", required=False)
+    vehicle_object = serializers.CharField(max_length=50, default="Sepeda Motor", required=False)
     coverage_type = serializers.ChoiceField(choices=CoverageType.choices)
     sum_insured = serializers.DecimalField(
         min_value=Decimal("1000000.00"),
@@ -82,6 +88,7 @@ class AssuranceListSerializer(serializers.ModelSerializer):
 
 
 class AssuranceDetailSerializer(serializers.ModelSerializer):
+    can_edit = serializers.SerializerMethodField()
     policy_holder = PolicyHolderSerializer(read_only=True)
     dealer = DealerSummarySerializer(read_only=True)
     documents = AssuranceDocumentSerializer(many=True, read_only=True)
@@ -115,10 +122,22 @@ class AssuranceDetailSerializer(serializers.ModelSerializer):
             "documents",
             "is_documents_complete",
             "missing_documents",
+            "can_edit",
         ]
 
     def get_required_documents(self, obj: VehicleAssurance) -> list:
         return get_required_document_types(obj.vehicle_category)
+
+    def get_can_edit(self, obj):
+        request = self.context.get("request")
+        if request is None:
+            return False
+        try:
+            require_editable(obj)
+            require_mutation_access(obj, request.user)
+        except APIException:
+            return False
+        return True
 
     def get_is_documents_complete(self, obj: VehicleAssurance) -> bool:
         uploaded_types = available_document_types(obj)

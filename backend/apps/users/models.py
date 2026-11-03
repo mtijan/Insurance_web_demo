@@ -31,6 +31,7 @@ class CustomUser(AbstractUser):
         help_text="Dealer association for users with role DEALER."
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    must_change_password = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

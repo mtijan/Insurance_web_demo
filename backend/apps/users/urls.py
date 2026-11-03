@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .password_views import ChangePasswordView
 from .views import (LoginView, LogoutView, MeView, UserManagementViewSet,
                     CsrfView, TokenLoginView, RefreshView, TokenRefreshView)
 
@@ -7,6 +8,7 @@ router = DefaultRouter()
 router.register(r"manage", UserManagementViewSet, basename="user-management")
 
 urlpatterns = [
+    path("change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
     path("csrf/", CsrfView.as_view(), name="auth-csrf"),
     path("token/", TokenLoginView.as_view(), name="auth-token"),
     path("refresh/", RefreshView.as_view(), name="auth-refresh"),
