@@ -1,4 +1,11 @@
 @import "tailwindcss";
+@import './styles/shell.css';
+@import './styles/content.css';
+@import './styles/forms.css';
+@import './styles/review.css';
+@import './styles/master.css';
+
+:root { --canvas:#F4F7FB; --surface:#FFFFFF; --text:#172D45; --text-muted:#425A78; --primary:#174E9A; --sidebar:#163B70; --sidebar-text:#E3EDFC; --border:#C8D3E1; --control-border:#7C8FA8; --focus:#9A5200; --success:#177245; --danger:#931B22; }
 
 :root { font-family: system-ui, sans-serif; color: #172d45; background: #f4f7fb; line-height: 1.6; }
 * { box-sizing: border-box; }

@@ -1,0 +1,13 @@
+.review-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+.review-workspace .data-grid { grid-template-columns:1fr; }
+.review-workspace .panel { margin-bottom:0; }
+.viewer { min-width:0; }
+.viewer-tools { gap:8px; margin:16px 0; }
+.viewer-tools button { font-size:14px; padding:8px; }
+.viewer-canvas { height:420px; overflow:auto; background:#e9eef5; margin:16px 0; border:1px solid var(--control-border); padding:16px; }
+.viewer-stage { aspect-ratio:1; position:relative; }
+.viewer-canvas img { max-width:none; transform-origin:center; display:block; position:absolute; top:50%; left:50%; }
+.review-history { padding-inline-start:24px; }
+.review-history li { padding-block:8px; border-bottom:1px solid var(--border); }
+.review-history p, .review-note { overflow-wrap:anywhere; white-space:pre-wrap; }
+@media(max-width:1023px) { .review-workspace { grid-template-columns:1fr; } .viewer-canvas { height:360px; } }

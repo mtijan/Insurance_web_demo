@@ -1,0 +1,5 @@
+import { z } from 'zod'
+export const dealerSchema = z.object({ code: z.string().trim().min(1, 'Kode wajib diisi.').max(20), name: z.string().trim().min(1, 'Nama dealer wajib diisi.').max(100), phone: z.string().max(20), address: z.string(), is_active: z.boolean() })
+export const userSchema = z.object({ username: z.string().min(1).max(150), email: z.email('Isi email yang sah.'), first_name: z.string().max(150), last_name: z.string().max(150), role: z.enum(['SUPER_ADMIN', 'ADMIN', 'AGENT', 'DEALER']), dealer: z.string(), password: z.string(), is_active: z.boolean() }).refine(value => value.role !== 'DEALER' || !!value.dealer, { path: ['dealer'], message: 'Akun Dealer wajib terhubung ke dealer.' })
+export const feeSchema = z.object({ admin_fee: z.string().regex(/^\d{1,8}(\.\d{1,2})?$/, 'Nominal nonnegatif, maksimal 8 digit dan 2 desimal.'), reason: z.string().trim().min(1, 'Alasan wajib diisi.').max(1000, 'Maksimal 1000 karakter.') })
+export function schemaMessage(failure: unknown) { return failure instanceof z.ZodError ? failure.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(' ') : '' }

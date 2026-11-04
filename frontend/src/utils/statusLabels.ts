@@ -1,0 +1,1 @@
+export const statusLabels: Record<string, string> = { DRAFT: 'Draft', SUBMITTED: 'Menunggu verifikasi', REVISION: 'Perlu perbaikan', ACTIVE: 'Aktif', APPROVED: 'Approved (legacy)', REJECTED: 'Ditolak final' }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from './authState'
 import { api, errorMessage } from '../services/apiClient'
@@ -15,6 +15,7 @@ export function useAuthForm(change: boolean) {
   const [busy, setBusy] = useState(false)
   const [completed, setCompleted] = useState(false)
   const errorRef = useRef<HTMLParagraphElement>(null)
+  useEffect(() => { if (error) errorRef.current?.focus() }, [error])
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setBusy(true)
     const form = event.currentTarget
@@ -30,7 +31,6 @@ export function useAuthForm(change: boolean) {
       }
     } catch (failure) {
       setError(validationMessage(failure))
-      requestAnimationFrame(() => errorRef.current?.focus())
     } finally { setBusy(false) }
   }
   async function exit() {
