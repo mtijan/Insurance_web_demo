@@ -3,11 +3,24 @@
 .review-workspace .panel { margin-bottom:0; }
 .viewer { min-width:0; }
 .viewer-tools { gap:8px; margin:16px 0; }
-.viewer-tools button { font-size:14px; padding:8px; }
-.viewer-canvas { height:420px; overflow:auto; background:#e9eef5; margin:16px 0; border:1px solid var(--control-border); padding:16px; }
+.viewer-tools button { font-size:14px; padding:8px 12px; }
+.viewer-canvas { height:420px; overflow:auto; background:#F1F5F9; margin:16px 0; border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05); }
 .viewer-stage { aspect-ratio:1; position:relative; }
-.viewer-canvas img { max-width:none; transform-origin:center; display:block; position:absolute; top:50%; left:50%; }
+.viewer-canvas img { max-width:none; transform-origin:center; display:block; position:absolute; top:50%; left:50%; border-radius:6px; box-shadow:var(--shadow-md); }
 .review-history { padding-inline-start:24px; }
-.review-history li { padding-block:8px; border-bottom:1px solid var(--border); }
+.review-history li { padding-block:10px; border-bottom:1px solid var(--border); }
 .review-history p, .review-note { overflow-wrap:anywhere; white-space:pre-wrap; }
+.application-overview h2 { margin:0; }
+.application-actions { margin:16px 0; }
+details > summary { cursor:pointer; font-weight:650; min-height:44px; padding-block:8px; color:var(--text); }
+.data-disclosure > .panel { margin-bottom:0; border:0; padding:0; box-shadow:none; }
+#inspection { scroll-margin-top:24px; }
+.task-metrics .metric { border-top:3px solid var(--primary); }
+.status-REJECTED { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+.secondary.danger-action { border-color:#FCA5A5; color:#DC2626; background:white; }
+.secondary.danger-action:not(:disabled):hover { background:#FEF2F2; border-color:#EF4444; color:#B91C1C; }
+.application-actions a, .actions > a { min-height:44px; display:inline-flex; align-items:center; }
+.setup-flow ol { display:flex; flex-wrap:wrap; gap:12px 24px; list-style:none; padding:0; }
+.setup-flow a { display:inline-flex; min-height:44px; align-items:center; font-weight:500; }
+.setup-flow a[aria-current=step] { font-weight:700; color:var(--primary); }
 @media(max-width:1023px) { .review-workspace { grid-template-columns:1fr; } .viewer-canvas { height:360px; } }

@@ -1,16 +1,18 @@
-.data-table { width:100%; border-collapse:separate; border-spacing:0; background:white; border:1px solid var(--border); border-radius:12px; overflow:hidden; font-size:14px; }
-.data-table th { text-align:left; background:#eaf1fc; padding:14px 16px; font-weight:650; }
-.data-table td { padding:16px; border-top:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
+.data-table { width:100%; border-collapse:separate; border-spacing:0; background:white; border:1px solid var(--border); border-radius:14px; overflow:hidden; font-size:14px; box-shadow:var(--shadow-sm); }
+.data-table th { text-align:left; background:#F8FAFC; color:var(--text-muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:14px 18px; border-bottom:1px solid var(--border); }
+.data-table td { padding:16px 18px; border-top:1px solid var(--border); vertical-align:middle; overflow-wrap:anywhere; color:var(--text); }
+.data-table tbody tr { transition:background 100ms ease; }
+.data-table tbody tr:hover { background:#F8FAFC; }
 .data-table .actions { margin:0; gap:8px; }
-.data-table button { padding:8px 12px; font-size:14px; }
+.data-table button { padding:8px 14px; font-size:13px; font-weight:500; border-radius:6px; }
 .cell-label { display:none; }
-.check-field { display:flex; align-items:center; gap:12px; min-height:44px; }
-.check-field input { width:24px; height:24px; min-height:24px; accent-color:var(--primary); }
+.check-field { display:flex; align-items:center; gap:12px; min-height:44px; font-weight:500; }
+.check-field input { width:20px; height:20px; min-height:20px; accent-color:var(--primary); cursor:pointer; }
 @media(max-width:1023px) {
  .data-table,.data-table tbody { display:block; }
  .data-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
- .data-table tr { display:grid; padding:12px; border-top:1px solid var(--border); }
+ .data-table tr { display:grid; padding:14px; border-top:1px solid var(--border); }
  .data-table tr:first-child { border-top:0; }
- .data-table td { border:0; padding:6px 4px; display:grid; grid-template-columns:minmax(80px,1fr) minmax(0,2fr); gap:12px; }
- .cell-label { display:block; color:var(--text-muted); }
+ .data-table td { border:0; padding:8px 4px; display:grid; grid-template-columns:minmax(80px,1fr) minmax(0,2fr); gap:12px; }
+ .cell-label { display:block; color:var(--text-muted); font-size:12px; font-weight:600; text-transform:uppercase; }
 }
