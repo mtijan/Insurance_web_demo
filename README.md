@@ -1,6 +1,6 @@
 # Kevin Assurance
 
-An enterprise assurance issuance and underwriting workflow management platform for motorcycle vehicle coverage. The platform standardizes multi-party operations across dealerships, field agents, underwriters, and executive administrators with strict multi-tenant role-based access control, automated conditional document ingestion, real-time inspection review pipelines, and ISO/IEC aligned security architecture.
+An enterprise assurance issuance and underwriting workflow management platform for motorcycle vehicle coverage. The platform standardizes multi-party operations across dealerships, field agents, underwriters, and executive administrators with strict multi-tenant role-based access control, automated conditional document ingestion, real-time inspection review pipelines, and an enterprise-grade security architecture.
 
 ---
 
@@ -11,7 +11,7 @@ Manual assurance issuance in the automotive distribution sector frequently suffe
 Kevin Assurance provides an integrated, end-to-end digital underwriting portal that:
 - Eliminates document loss and intake bottlenecks through automated conditional document requirements.
 - Accelerates issuance turnaround times from days to under 15 minutes.
-- Guarantees data privacy and compliance aligned with ISO/IEC 27001 (Information Security) and ISO/IEC 27701 (Privacy Information Management).
+- Guarantees robust data privacy and access security across all operational touchpoints.
 - Enforces data integrity through strict server-side calculation engines and atomic multi-tier review state machines.
 
 ---
@@ -121,7 +121,7 @@ Underwriting workflows support structured collaboration between field agents, un
 - **Authentication:** SimpleJWT (Cookie-Based), Custom CSRF Protection Middleware
 - **Database:** PostgreSQL 18 (Production & Integration), SQLite (Unit Test Suite)
 - **Document & Media Processing:** Pillow 13.0, ReportLab 5.1, openpyxl 3.1
-- **Architectural Standards:** Domain-driven service/selector pattern, ISO/IEC 25010 maintainability guidelines
+- **Architectural Standards:** Domain-driven service/selector pattern and modular clean architecture
 
 ### Frontend Application
 - **Language & Runtime:** TypeScript 7, React 19, Vite 8
@@ -172,15 +172,6 @@ kevin-assurance/
 |   |   +-- utils/                 # Image compressor, date formatters, status labels
 |   |-- package.json               # Frontend dependencies and npm scripts
 |   +-- vite.config.ts             # Vite build configuration and dev proxy setup
-|-- docs/                          # Comprehensive engineering specifications & diagrams
-|   |-- 01_BRD.md                  # Business Requirements Document
-|   |-- 02_PRD.md                  # Product Requirements Document
-|   |-- 03_Insurance_Products.md   # Insurance product specifications
-|   |-- 04_SRS.md                  # Software Requirements Specification
-|   |-- 06_TDD.md                  # Technical Design Document
-|   |-- 07_Database.md             # Data dictionary and schema definitions
-|   |-- 08_API.md                  # REST API contract specifications
-|   +-- diagrams/                  # Mermaid system diagrams
 +-- README.md                      # Project portfolio overview
 ```
 
@@ -272,12 +263,3 @@ cd frontend
 npm run build
 npm run lint
 ```
-
----
-
-## Engineering Standards & References
-
-The system was designed and verified against established engineering and software quality standards:
-- **ISO/IEC 25010:2023:** Systems and software Quality Requirements and Evaluation (SQuaRE).
-- **ISO/IEC 27001:2022 & ISO/IEC 27701:2025:** Information security management and privacy information protection principles.
-- **OWASP Top 10:** Comprehensive defenses against Cross-Site Scripting (XSS), Cross-Site Request Forgery (CSRF), and Broken Access Control.
