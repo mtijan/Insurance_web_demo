@@ -39,6 +39,9 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="/assurances/new" element={<AssuranceFormPage />} />
             <Route path="/assurances/:id/edit" element={<AssuranceFormPage />} />
             <Route path="/assurances/:id" element={<AssuranceDetailPage />} />
+            <Route element={<ProtectedRoute roles={['AGENT']} />}>
+              <Route path="/inspection" element={<AssurancesPage inspection />} />
+            </Route>
             <Route element={<ProtectedRoute roles={['SUPER_ADMIN', 'ADMIN']} />}>
               <Route path="/review" element={<AssurancesPage review />} />
               <Route path="/review/:id" element={<AdminReviewPage />} />

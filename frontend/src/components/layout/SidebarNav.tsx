@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/authState'
-import { navigation } from './navigation'
+import { navigationFor } from './navigation'
 import { LogoutButton } from './LogoutButton'
 
 export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const { user } = useAuth()
   const { pathname } = useLocation()
   const [dismissed, setDismissed] = useState('')
-  const items = navigation.filter(item => user && item.roles.includes(user.role))
+  const items = user ? navigationFor(user.role) : []
   return <>
     <div className="sidebar-brand" aria-label="Kevin Assurance"><span aria-hidden="true">KA</span>{!collapsed && <strong>Kevin Assurance<small>Jaminan kendaraan</small></strong>}</div>
     <nav aria-label="Navigasi utama">
