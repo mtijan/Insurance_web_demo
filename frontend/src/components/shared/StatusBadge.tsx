@@ -1,2 +1,2 @@
-import { statusLabels } from '../../utils/statusLabels'
-export function StatusBadge({ status }: { status: string }) { return <span className={`badge status-${status}`}>{statusLabels[status] ?? status}</span> }
+import { workflowLabel } from '../../utils/workflowPresentation'
+export function StatusBadge({ status, stage }: { status: string; stage?: string }) { return <span className={`badge status-${status}`}>{workflowLabel(status, stage)}</span> }

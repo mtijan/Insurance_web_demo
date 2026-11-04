@@ -1,1 +1,1 @@
-export const statusLabels: Record<string, string> = { DRAFT: 'Draft', SUBMITTED: 'Menunggu verifikasi', REVISION: 'Perlu perbaikan', ACTIVE: 'Aktif', APPROVED: 'Approved (legacy)', REJECTED: 'Ditolak final' }
+export const statusLabels: Record<string, string> = { DRAFT: 'Draft', SUBMITTED: 'Dalam pemeriksaan', REVISION: 'Perlu perbaikan', ACTIVE: 'Aktif', APPROVED: 'Disetujui (data terdahulu)', REJECTED: 'Ditolak final' }
