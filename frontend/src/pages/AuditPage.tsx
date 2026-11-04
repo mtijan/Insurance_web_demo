@@ -30,7 +30,7 @@ export function AuditPage() {
     {!busy && !error && !entries.length && <p>Belum ada catatan audit.</p>}
     <ul className="assurance-list">{!busy && !error && entries.map(entry => <li key={entry.id}>
       <strong>{entry.action} · {entry.entity_name}</strong><span>{entry.entity_id}</span>
-      <time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString('id-ID')}</time>
+      <time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</time>
     </li>)}</ul>
     <nav aria-label="Halaman audit" className="toolbar">
       <button disabled={busy || page === 1} onClick={() => move(-1)}>Sebelumnya</button>

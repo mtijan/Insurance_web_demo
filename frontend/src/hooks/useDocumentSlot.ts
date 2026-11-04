@@ -1,38 +1,41 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, errorMessage } from '../services/apiClient'
+import { compressImage } from '../utils/imageCompressor'
+import type { CompressionMetrics } from '../utils/imageCompressor'
+import { uploadDocument } from '../services/documents'
 
-async function uploadFile(assuranceId: string, type: string, file: File, progress: (value: number) => void) {
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-    throw new Error('Pilih JPEG, PNG, atau WebP maksimal 5 MiB.')
-  }
-  const data = new FormData()
-  data.set('document_type', type); data.set('file', file)
-  await api.post(`assurances/${assuranceId}/documents/`, data, {
-    onUploadProgress: event => progress(Math.round((event.loaded / (event.total || file.size)) * 100)),
-  })
-}
-export function useDocumentSlot(assuranceId: string, type: string, reload: () => Promise<void>) {
-  const [busy, setBusy] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [error, setError] = useState('')
-  const [imageError, setImageError] = useState(false)
-  const input = useRef<HTMLInputElement>(null)
+export function useDocumentSlot(assuranceId: string, type: string, reload: () => Promise<void>, activity?: (busy: boolean) => void) {
+  const [busy, setBusy] = useState(false), [progress, setProgress] = useState(0), [error, setError] = useState('')
+  const [imageError, setImageError] = useState(false), [saved, setSaved] = useState(false)
+  const [metrics, setMetrics] = useState<CompressionMetrics>(), [preview, setPreview] = useState('')
+  const input = useRef<HTMLInputElement>(null), selected = useRef<File | undefined>(undefined)
+  const running = useRef<AbortController | null>(null)
+  useEffect(() => () => running.current?.abort(), [])
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
   async function upload(file?: File) {
-    if (!file) return
-    setBusy(true); setError(''); setProgress(0)
+    if (!file || running.current) return
+    selected.current = file
+    const controller = new AbortController(); running.current = controller
+    setBusy(true); activity?.(true); setError(''); setProgress(0); setSaved(false)
     try {
-      await uploadFile(assuranceId, type, file, setProgress)
+      const result = await compressImage(file)
+      if (controller.signal.aborted) return
+      setMetrics(result.metrics); setPreview(URL.createObjectURL(result.file))
+      await uploadDocument(assuranceId, type, result.file, controller.signal, setProgress)
+      setSaved(true); selected.current = undefined
       if (input.current) input.current.value = ''
       await reload(); setImageError(false)
     } catch (failure) {
-      setError(failure instanceof Error && failure.message.startsWith('Pilih JPEG') ? failure.message : errorMessage(failure))
-    } finally { setBusy(false) }
+      if (!controller.signal.aborted) setError(failure instanceof Error && !('isAxiosError' in failure) ? failure.message : errorMessage(failure))
+    } finally { running.current = null; setBusy(false); activity?.(false) }
   }
   async function remove(id: string) {
-    setBusy(true); setError('')
-    try { await api.delete(`assurances/${assuranceId}/documents/${id}/`); await reload() }
-    catch (failure) { setError(errorMessage(failure)) }
-    finally { setBusy(false) }
+    if (running.current) return
+    const controller = new AbortController(); running.current = controller
+    setBusy(true); activity?.(true); setError(''); setSaved(false)
+    try { await api.delete(`assurances/${assuranceId}/documents/${id}/`, { signal: controller.signal }); await reload(); setPreview(''); setMetrics(undefined); return true }
+    catch (failure) { if (!controller.signal.aborted) setError(errorMessage(failure)); return false }
+    finally { running.current = null; setBusy(false); activity?.(false) }
   }
-  return { busy, progress, error, imageError, setImageError, input, upload, remove }
+  return { busy, progress, error, imageError, setImageError, input, upload, remove, retry: () => upload(selected.current), metrics, saved, preview }
 }

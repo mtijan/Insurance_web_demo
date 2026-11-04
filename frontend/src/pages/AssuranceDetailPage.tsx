@@ -1,44 +1,37 @@
-import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, errorMessage } from '../services/apiClient'
-import { DocumentUploadSlot } from '../components/documents/DocumentUploadSlot'
+import { useResource } from '../hooks/useResource'
 import type { AssuranceDetail } from '../types/assurance'
+import { Feedback } from '../components/shared/Feedback'
+import { AssuranceSummary } from '../components/assurances/AssuranceSummary'
+import { PdfDownload } from '../components/assurances/PdfDownload'
+import { DocumentSlots } from '../components/documents/DocumentSlots'
+import { useAuth } from '../auth/authState'
+import { InspectionPanel } from '../components/review/InspectionPanel'
+import { ReviewProgress } from '../components/review/ReviewProgress'
+import { useInspection } from '../hooks/useInspection'
 
 export function AssuranceDetailPage() {
   const { id } = useParams()
-  const [detail, setDetail] = useState<AssuranceDetail | null>(null)
-  const [error, setError] = useState('')
-  const reload = useCallback(async () => {
-    try {
-      const response = await api.get(`assurances/${id}/`)
-      setDetail(response.data.data); setError('')
-    }
-    catch (failure) { setError(errorMessage(failure)) }
-  }, [id])
-  useEffect(() => {
-    const controller = new AbortController()
-    async function load() {
-      try {
-        const response = await api.get(`assurances/${id}/`, { signal: controller.signal })
-        setDetail(response.data.data); setError('')
-      } catch (failure) { if (!controller.signal.aborted) setError(errorMessage(failure)) }
-    }
-    void load()
-    return () => controller.abort()
-  }, [id])
-  const current = detail?.id === id ? detail : null
-  const types = current ? [...new Set([...current.required_documents.flatMap(type => type.split(' OR ')), ...current.documents.map(document => document.document_type)])] : []
-  return <section>
-    <Link to="/">Kembali ke daftar jaminan</Link>
-    <h1>Dokumen jaminan</h1>
-    {error && <div role="alert"><p className="error">{error}</p><button onClick={() => void reload()}>Coba lagi</button></div>}
-    {!current && !error && <p role="status">Memuat detail…</p>}
+  return <DetailWorkspace key={id} id={id!} />
+}
+function DetailWorkspace({ id }: { id: string }) {
+  const { user } = useAuth()
+  const resource = useResource<AssuranceDetail>(`assurances/${id}/`)
+  const inspection = useInspection(id, resource.reload)
+  const current = resource.data
+  return <section aria-busy={resource.loading}>
+    <Link to="/">Kembali ke daftar jaminan</Link><h1>Dokumen jaminan</h1>
+    <Feedback {...resource} retry={resource.reload} />
     {current && <>
-      <h2>{current.policy_holder.full_name}</h2><p>Status: {current.status}</p>
-      {current.status === 'ACTIVE' && <a className="download" href={`/api/v1/assurances/${id}/summary-pdf/`}>Unduh ringkasan jaminan (PDF)</a>}
-      <p>JPEG, PNG, atau WebP maksimal 5 MiB per berkas. Untuk mengganti berkas, unggah pengganti terlebih dahulu, lalu hapus berkas lama.</p>
+      <AssuranceSummary detail={current} />
+      <ReviewProgress detail={current} />
+      {current.status === 'SUBMITTED' && user?.role === 'AGENT' && <InspectionPanel detail={current} admin={false} review={inspection} />}
+      {current.status !== 'SUBMITTED' && inspection.success && <p role="status">{inspection.success}</p>}
+      {current.can_edit && <Link className="download" to={`/assurances/${current.id}/edit`}>Lanjutkan pengajuan</Link>}
+      {current.status === 'ACTIVE' && <PdfDownload id={current.id} />}
+      <p>JPEG, PNG, atau WebP maksimal 5 MiB per berkas. Untuk mengganti berkas, unggah pengganti dahulu, lalu hapus berkas lama.</p>
       {!current.can_edit && <p>Dokumen hanya dapat dibaca pada akun atau status ini.</p>}
-      <div className="document-grid">{types.map(type => <DocumentUploadSlot key={type} assuranceId={current.id} type={type} documents={current.documents.filter(document => document.document_type === type)} editable={current.can_edit} reload={reload} />)}</div>
+      <DocumentSlots detail={current} reload={resource.reload} />
     </>}
   </section>
 }
