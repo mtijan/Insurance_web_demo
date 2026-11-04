@@ -6,8 +6,8 @@ import { api } from '../../services/apiClient'
 import { useOperation } from '../../hooks/useOperation'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 
-export function AssignmentEditor({ initial, agents, dealers, close, done }: { initial?: Assignment; agents: ManagedUser[]; dealers: Dealer[]; close: () => void; done: () => Promise<unknown> }) {
-  const [agent, setAgent] = useState(initial?.agent ?? ''), [dealer, setDealer] = useState(initial?.dealer ?? '')
+export function AssignmentEditor({ initial, agents, dealers, close, done, preferredAgent = '' }: { initial?: Assignment; agents: ManagedUser[]; dealers: Dealer[]; close: () => void; done: () => Promise<unknown>; preferredAgent?: string }) {
+  const [agent, setAgent] = useState(initial?.agent ?? preferredAgent), [dealer, setDealer] = useState(initial?.dealer ?? '')
   const [confirm, setConfirm] = useState(false), operation = useOperation()
   async function save() {
     if (!z.uuid().safeParse(agent).success || !z.uuid().safeParse(dealer).success) { operation.setError('Pilih Agent dan Dealer yang sah.'); return }
