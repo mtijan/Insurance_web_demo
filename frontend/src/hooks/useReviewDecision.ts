@@ -6,11 +6,11 @@ import type { Envelope } from '../types/auth'
 
 export function useReviewDecision(id: string, reload: () => Promise<unknown>) {
   const operation = useOperation()
-  const [decision, setDecision] = useState<'APPROVE' | 'REQUEST_REVISION' | 'REJECT_FINAL' | null>(null)
+  const [decision, setDecision] = useState<'APPROVE' | 'REJECT_FINAL' | null>(null)
   const [notes, setNotes] = useState(''), [success, setSuccess] = useState('')
   const [mustReload, setMustReload] = useState(false)
   async function submit() {
-    if (decision !== 'APPROVE' && !notes.trim()) { operation.setError('Alasan perbaikan atau penolakan wajib diisi.'); return }
+    if (decision !== 'APPROVE' && !notes.trim()) { operation.setError('Alasan penolakan wajib diisi.'); return }
     setSuccess('')
     const result = await operation.run(async signal => {
       const response = await api.post<Envelope<AssuranceDetail>>(`assurances/${id}/review/`, { decision, review_notes: notes }, { signal })
