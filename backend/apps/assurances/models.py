@@ -106,6 +106,12 @@ class VehicleAssurance(models.Model):
         db_index=True
     )
     review_notes = models.TextField(blank=True, null=True)
+    verification_stage = models.CharField(max_length=20, default="WAITING", choices=[
+        ("WAITING", "Waiting"), ("DATA", "Data review"),
+        ("DOCUMENTS", "Document review"), ("COMPLETE", "Verification complete"),
+    ])
+    data_verified = models.BooleanField(default=False)
+    documents_verified = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -149,3 +155,21 @@ class AssuranceNumberSequence(models.Model):
 
     class Meta:
         db_table = "assurance_number_sequence"
+
+
+class AssuranceReviewEvent(models.Model):
+    """Review history exposed read-only within the assurance's current scope."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    assurance = models.ForeignKey(VehicleAssurance, on_delete=models.CASCADE,
+                                  related_name="review_history")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    actor_role = models.CharField(max_length=20)
+    action = models.CharField(max_length=30)
+    section = models.CharField(max_length=20, default="GENERAL")
+    review_notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "assurance_review_event"
+        ordering = ["created_at", "id"]

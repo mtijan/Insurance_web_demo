@@ -9,6 +9,7 @@ from apps.assurances.services.workflow_validation import (
 )
 from apps.assurances.workflow_serializers import ReviewAssuranceSerializer
 from apps.audit.services.audit_service import record_audit
+from apps.assurances.services.inspection_service import append_review_event
 
 
 def next_assurance_number(year):
@@ -37,7 +38,11 @@ def submit_assurance_application(assurance, user):
     validate_submission_data(assurance)
     previous_status = assurance.status
     assurance.status = AssuranceStatus.SUBMITTED
-    assurance.save(update_fields=["status", "updated_at"])
+    assurance.verification_stage = "WAITING"
+    assurance.data_verified = assurance.documents_verified = False
+    assurance.save(update_fields=["status", "verification_stage", "data_verified",
+                                  "documents_verified", "updated_at"])
+    append_review_event(assurance, user, "SUBMIT")
     record_audit(user, "SUBMIT", "VEHICLE_ASSURANCE", assurance.pk, {
         "status": {"old": previous_status, "new": assurance.status},
     })
@@ -59,12 +64,18 @@ def review_assurance(assurance, user, data):
         validate_submission_data(assurance)
         assurance.assurance_number = next_assurance_number(assurance.issuance_year)
         assurance.status = AssuranceStatus.ACTIVE
+        assurance.data_verified = assurance.documents_verified = True
+        assurance.verification_stage = "COMPLETE"
+    elif decision == "REJECT_FINAL":
+        assurance.status = AssuranceStatus.REJECTED
     else:
         assurance.status = AssuranceStatus.REVISION
     assurance.review_notes = notes
     assurance.reviewed_by = user
     assurance.save(update_fields=["status", "assurance_number", "review_notes",
-                                  "reviewed_by", "updated_at"])
+                                  "reviewed_by", "verification_stage", "data_verified",
+                                  "documents_verified", "updated_at"])
+    append_review_event(assurance, user, decision, notes=notes)
     record_audit(user, decision, "VEHICLE_ASSURANCE", assurance.pk, {
         "status": {"old": AssuranceStatus.SUBMITTED, "new": assurance.status},
         "review_notes_present": bool(notes), "assurance_number": assurance.assurance_number,

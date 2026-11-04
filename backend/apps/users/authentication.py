@@ -6,6 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 
 from apps.users.models import AuthSession
+from apps.users.csrf import CsrfRejected
 
 
 class CsrfCheck(CsrfViewMiddleware):
@@ -30,7 +31,7 @@ def enforce_csrf(request):
     check.process_request(request)
     reason = check.process_view(request, None, (), {})
     if reason:
-        raise PermissionDenied("CSRF verification failed.")
+        raise CsrfRejected(reason)
 
 
 def require_session(token, user_id):

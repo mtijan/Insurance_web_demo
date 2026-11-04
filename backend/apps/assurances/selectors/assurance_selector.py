@@ -19,7 +19,7 @@ def get_assurances_for_user(user: CustomUser) -> QuerySet[VehicleAssurance]:
         "dealer",
         "created_by",
         "reviewed_by"
-    ).prefetch_related("documents")
+    ).prefetch_related("documents", "review_history")
 
     if user.is_super_admin or user.is_admin_user:
         return base_qs.all()

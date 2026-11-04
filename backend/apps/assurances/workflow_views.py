@@ -1,21 +1,29 @@
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed, ValidationError
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.assurances.models import AssuranceStatus
+from apps.assurances.selectors.assurance_filters import filter_assurances
 from apps.assurances.serializers import AssuranceDetailSerializer
 from apps.assurances.services.workflow_service import (
     review_assurance, submit_assurance_application,
 )
 from apps.reports.services.excel_export_service import export_assurances_excel
-from apps.users.permissions import IsAdmin, IsSuperAdmin
+from apps.users.permissions import IsAdmin, IsSuperAdmin, IsReviewParticipant
+from apps.assurances.services.inspection_service import inspect_assurance
 from apps.reports.services.pdf_summary_service import export_summary_pdf
 
 
 class AssuranceWorkflowMixin:
+    @action(detail=True, methods=["post"], url_path="inspection",
+            permission_classes=[IsAuthenticated, IsReviewParticipant])
+    def inspection(self, request, pk=None):
+        assurance = inspect_assurance(self.get_object(), request.user, request.data)
+        return Response({"success": True, "data": AssuranceDetailSerializer(
+            assurance, context=self.get_serializer_context()).data})
+
     @action(detail=True, methods=["get"], url_path="summary-pdf")
     def summary_pdf(self, request, pk=None):
         assurance = self.get_object()
@@ -57,12 +65,7 @@ class AssuranceWorkflowMixin:
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
-        status = self.request.query_params.get("status")
-        if status:
-            if status not in AssuranceStatus.values:
-                raise ValidationError({"status": "Invalid assurance status."})
-            queryset = queryset.filter(status=status)
-        return queryset
+        return filter_assurances(queryset, self.request.query_params)
 
     def destroy(self, request, *args, **kwargs):
         raise MethodNotAllowed("DELETE")

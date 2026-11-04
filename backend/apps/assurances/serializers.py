@@ -7,6 +7,7 @@ from apps.assurances.models import (
     VehicleCategory,
     CoverageType,
     nik_validator,
+    AssuranceReviewEvent,
 )
 from apps.dealers.models import Dealer
 from apps.assurances.services.input_validation import normalize_name
@@ -83,8 +84,18 @@ class AssuranceListSerializer(serializers.ModelSerializer):
             "sum_insured",
             "total_premium",
             "status",
+            "verification_stage",
+            "data_verified",
+            "documents_verified",
             "created_at",
         ]
+
+
+class ReviewEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssuranceReviewEvent
+        fields = ["id", "action", "section", "review_notes", "actor_role", "created_at"]
+        read_only_fields = fields
 
 
 class AssuranceDetailSerializer(serializers.ModelSerializer):
@@ -95,9 +106,11 @@ class AssuranceDetailSerializer(serializers.ModelSerializer):
     required_documents = serializers.SerializerMethodField()
     is_documents_complete = serializers.SerializerMethodField()
     missing_documents = serializers.SerializerMethodField()
+    review_history = ReviewEventSerializer(many=True, read_only=True)
 
     class Meta:
         model = VehicleAssurance
+        read_only_fields = ["verification_stage", "data_verified", "documents_verified"]
         fields = [
             "id",
             "assurance_number",
@@ -116,6 +129,10 @@ class AssuranceDetailSerializer(serializers.ModelSerializer):
             "issuance_year",
             "status",
             "review_notes",
+            "verification_stage",
+            "data_verified",
+            "documents_verified",
+            "review_history",
             "created_at",
             "updated_at",
             "required_documents",

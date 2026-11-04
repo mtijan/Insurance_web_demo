@@ -22,4 +22,7 @@ def api_exception_handler(exc, context):
     }
     if getattr(exc, "default_code", None) == "password_change_required":
         response.data["error_code"] = "PASSWORD_CHANGE_REQUIRED"
+    if getattr(exc, "default_code", None) == "csrf_failed":
+        response.data["error_code"] = "CSRF_FAILED"
+        response.data["csrf_reason"] = exc.reason
     return response

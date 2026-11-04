@@ -52,6 +52,12 @@ class IsAgent(BasePermission):
         )
 
 
+class IsReviewParticipant(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and (user.is_admin_user or user.is_agent))
+
+
 class IsDealer(BasePermission):
     """
     Allows access only to Dealer staff.
