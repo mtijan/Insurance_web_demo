@@ -1,10 +1,9 @@
 import type { AssuranceDetail } from '../../types/assurance'
 import { money, dateLabel } from '../../utils/format'
-import { StatusBadge } from '../shared/StatusBadge'
 
 export function AssuranceSummary({ detail: d }: { detail: AssuranceDetail }) {
   return <section className="panel" aria-label="Data jaminan">
-    <h2>{d.policy_holder.full_name}</h2><StatusBadge status={d.status} />
+    <h2>Data pengajuan dan premi</h2>
     <dl className="data-grid">
       <div><dt>NIK</dt><dd>{d.policy_holder.nik}</dd></div><div><dt>Dealer</dt><dd>{d.dealer.name}</dd></div>
       <div><dt>Telepon</dt><dd>{d.policy_holder.phone || 'Tidak diisi'}</dd></div><div><dt>Alamat</dt><dd>{d.policy_holder.address || 'Tidak diisi'}</dd></div>
@@ -13,6 +12,5 @@ export function AssuranceSummary({ detail: d }: { detail: AssuranceDetail }) {
       <div><dt>Premi murni</dt><dd>{money(d.base_premium)}</dd></div><div><dt>Biaya admin (snapshot)</dt><dd>{money(d.admin_fee)}</dd></div>
       <div><dt>Total premi</dt><dd><strong>{money(d.total_premium)}</strong></dd></div><div><dt>Nomor jaminan</dt><dd>{d.assurance_number ?? 'Belum diterbitkan'}</dd></div>
     </dl>
-    {d.review_notes && <p className="notice"><strong>Catatan pemeriksaan:</strong> {d.review_notes}</p>}
   </section>
 }
