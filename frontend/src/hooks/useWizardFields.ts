@@ -4,9 +4,9 @@ import type { DraftFields, FieldErrors } from '../types/wizard'
 import { draftValues } from '../services/assurances'
 import { stepFields, validateFields } from '../schemas/assurance'
 
-export function useWizardFields(initial?: AssuranceDetail) {
-  const [values, setValues] = useState(() => draftValues(initial))
-  const [saved, setSaved] = useState(() => JSON.stringify(draftValues(initial)))
+export function useWizardFields(initial?: AssuranceDetail, accountDealerId?: string) {
+  const [values, setValues] = useState(() => draftValues(initial, accountDealerId))
+  const [saved, setSaved] = useState(() => JSON.stringify(draftValues(initial, accountDealerId)))
   const [errors, setErrors] = useState<FieldErrors>({})
   const [attempt, setAttempt] = useState(0)
   const [step, setStep] = useState(0)

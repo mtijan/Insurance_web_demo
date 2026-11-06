@@ -2,6 +2,7 @@ export function workflowStage(status: string, stage = 'WAITING') {
   if (status === 'REVISION') return 'Menunggu perbaikan Dealer'
   if (status === 'ACTIVE') return 'Disetujui dan aktif'
   if (status === 'REJECTED') return 'Ditolak final'
+  if (status === 'APPROVED') return 'Disetujui (data terdahulu)'
   if (status === 'DRAFT') return 'Belum dikirim'
   if (stage === 'COMPLETE') return 'Menunggu keputusan Admin'
   if (stage === 'DOCUMENTS') return 'Verifikasi berkas'

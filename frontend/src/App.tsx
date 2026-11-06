@@ -9,6 +9,7 @@ import { AssuranceDetailPage } from './pages/AssuranceDetailPage'
 import { AuditPage } from './pages/AuditPage'
 import { DashboardPage } from './pages/DashboardPage'
 const AssuranceFormPage = lazy(async () => ({ default: (await import('./pages/AssuranceFormPage')).AssuranceFormPage }))
+const DealerApplicationsPage = lazy(async () => ({ default: (await import('./pages/DealerApplicationsPage')).DealerApplicationsPage }))
 const AdminReviewPage = lazy(async () => ({ default: (await import('./pages/AdminReviewPage')).AdminReviewPage }))
 const DealersPage = lazy(async () => ({ default: (await import('./pages/DealersPage')).DealersPage }))
 const UsersPage = lazy(async () => ({ default: (await import('./pages/admin/UsersPage')).UsersPage }))
@@ -37,6 +38,10 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/dealers" element={<DealersPage />} />
             <Route path="/assurances/new" element={<AssuranceFormPage />} />
+            <Route element={<ProtectedRoute roles={['DEALER']} />}>
+              <Route path="/assurances/drafts" element={<DealerApplicationsPage key="drafts" drafts />} />
+              <Route path="/assurances/progress" element={<DealerApplicationsPage key="progress" />} />
+            </Route>
             <Route path="/assurances/:id/edit" element={<AssuranceFormPage />} />
             <Route path="/assurances/:id" element={<AssuranceDetailPage />} />
             <Route element={<ProtectedRoute roles={['AGENT']} />}>

@@ -9,7 +9,7 @@ export function LoginPage({ change = false }: { change?: boolean }) {
   const form = useAuthForm(change)
   if (loading) return <p role="status">Memeriksa sesi…</p>
   if (change && !user) return <Navigate to={form.completed ? '/login?changed=1' : '/login'} replace />
-  if (!change && user) return <Navigate to={user.must_change_password ? '/change-password' : '/'} replace />
+  if (!change && user) return <Navigate to={user.must_change_password ? '/change-password' : user.role === 'DEALER' ? '/assurances/new' : '/'} replace />
   return <AuthCard change={change} form={form} sessionError={sessionError} changed={new URLSearchParams(location.search).has('changed')} />
 }
 function AuthCard({ change, form, sessionError, changed }: { change: boolean; form: AuthForm; sessionError: string; changed: boolean }) {

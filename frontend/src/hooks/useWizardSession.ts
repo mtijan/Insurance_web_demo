@@ -4,8 +4,8 @@ import { useWizardFields } from './useWizardFields'
 import { useDraftActions } from './useDraftActions'
 import { useNavigationSafety } from '../components/layout/navigationSafety'
 
-export function useWizardSession(initial?: AssuranceDetail) {
-  const fields = useWizardFields(initial), actions = useDraftActions(fields, initial)
+export function useWizardSession(initial?: AssuranceDetail, accountDealerId?: string) {
+  const fields = useWizardFields(initial, accountDealerId), actions = useDraftActions(fields, initial)
   const [uploads, setUploads] = useState(0), [confirm, setConfirm] = useState(false)
   const activity = useCallback((busy: boolean) => setUploads(n => Math.max(0, n + (busy ? 1 : -1))), [])
   const previousStep = useRef(fields.step)

@@ -9,6 +9,8 @@
 .record-heading { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .record-heading a { font-weight:650; color:var(--primary); text-decoration:none; }
 .record-heading a:hover { text-decoration:underline; }
+.application-stage { margin:4px 0; }
+.dealer-stage-flags { display:flex; gap:8px 24px; flex-wrap:wrap; color:var(--text-muted); font-size:14px; }
 .assurance-list,.assurance-list li,.record-heading,.record-heading a { min-width:0; overflow-wrap:anywhere; }
 .record-heading a { flex:1 1 220px; }
 .badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:650; background:#F1F5F9; color:var(--text); width:fit-content; letter-spacing:0.02em; border:1px solid #E2E8F0; }
