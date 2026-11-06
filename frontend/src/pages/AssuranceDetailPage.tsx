@@ -11,10 +11,11 @@ import { ReviewProgress } from '../components/review/ReviewProgress'
 import { useInspection } from '../hooks/useInspection'
 import { ApplicationOverview } from '../components/assurances/ApplicationOverview'
 import { ReviewHistory } from '../components/review/ReviewHistory'
+import { DocumentPreviewProvider } from '../components/documents/DocumentPreviewProvider'
 
 export function AssuranceDetailPage() {
   const { id } = useParams()
-  return <DetailWorkspace key={id} id={id!} />
+  return <DocumentPreviewProvider key={id}><DetailWorkspace id={id!} /></DocumentPreviewProvider>
 }
 function DetailWorkspace({ id }: { id: string }) {
   const { user } = useAuth()

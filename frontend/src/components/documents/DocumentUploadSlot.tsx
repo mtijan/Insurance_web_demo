@@ -3,6 +3,7 @@ import type { Document } from '../../types/assurance'
 import { UploadFeedback } from './UploadFeedback'
 import { useState } from 'react'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
+import { useDocumentPreviews } from '../../hooks/documentPreviewState'
 
 interface Props {
   assuranceId: string
@@ -14,6 +15,7 @@ interface Props {
 }
 export function DocumentUploadSlot({ assuranceId, type, documents, editable, reload, activity }: Props) {
   const state = useDocumentSlot(assuranceId, type, reload, activity)
+  const { previews } = useDocumentPreviews()
   const { busy, setImageError, input, upload, remove } = state
   const [removing, setRemoving] = useState<string | null>(null)
   const label = type.replaceAll('_', ' ')
@@ -22,11 +24,12 @@ export function DocumentUploadSlot({ assuranceId, type, documents, editable, rel
     <p>{documents.length ? 'Sudah diunggah' : 'Belum diunggah'}</p>
     {documents.map((document, index) => <figure key={document.id}>
       <a href={`/api/v1/assurances/${assuranceId}/documents/${document.id}/view/`} target="_blank" rel="noreferrer">Buka {label} {index + 1} (tab baru)</a>
-      <img width={300} height={200} loading="lazy" src={`/api/v1/assurances/${assuranceId}/documents/${document.id}/view/`} alt={`Pratinjau ${label} ${index + 1}`} onError={() => setImageError(true)} />
+      {previews[document.id] && <img width={300} height={200} loading="lazy" src={previews[document.id].url} alt={`Pratinjau file asli ${label} ${index + 1}`} onError={() => setImageError(true)} />}
+      <figcaption>{previews[document.id]?.name ?? document.original_filename}</figcaption>
       {editable && <button className="secondary" disabled={busy} onClick={() => setRemoving(document.id)} aria-label={`Hapus ${label} ${index + 1}`}>Hapus berkas</button>}
     </figure>)}
     {editable && <label>Unggah {label}<input ref={input} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => void upload(event.target.files?.[0])} /></label>}
-    <UploadFeedback state={state} label={label} editable={editable} />
+    <UploadFeedback state={state} label={label} editable={editable} showPreview={!documents.some(document => previews[document.id]?.url === state.preview?.url)} />
     {removing && <ConfirmDialog title={`Hapus berkas ${label}?`} busy={busy} close={() => setRemoving(null)}><p>Berkas ini akan dihapus dari draft. Unggah pengganti terlebih dahulu bila diperlukan.</p>{state.error && <p role="alert" className="error">{state.error}</p>}<button disabled={busy} onClick={async () => { if (await remove(removing)) setRemoving(null) }}>Konfirmasi hapus berkas</button></ConfirmDialog>}
   </section>
 }
