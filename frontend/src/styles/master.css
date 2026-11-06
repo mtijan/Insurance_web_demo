@@ -4,7 +4,10 @@
 .data-table tbody tr { transition:background 100ms ease; }
 .data-table tbody tr:hover { background:#F8FAFC; }
 .data-table .actions { margin:0; gap:8px; }
-.data-table button { padding:8px 14px; font-size:13px; font-weight:500; border-radius:6px; }
+.data-table button, .data-table .action-link { padding:8px 14px; min-height:38px; font-size:13px; font-weight:600; border-radius:8px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+.data-table .action-link { background:#EFF6FF; color:var(--primary); border:1px solid #BFDBFE; }
+.data-table .action-link:hover { background:#DBEAFE; border-color:#93C5FD; color:var(--primary-hover); }
+.data-table button.danger-outline:not(:disabled):hover { background:#FEF2F2; border-color:#FCA5A5; color:#B91C1C; }
 .cell-label { display:none; }
 .check-field { display:flex; align-items:center; gap:12px; min-height:44px; font-weight:500; }
 .check-field input { width:20px; height:20px; min-height:20px; accent-color:var(--primary); cursor:pointer; }

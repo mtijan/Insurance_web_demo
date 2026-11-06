@@ -2,6 +2,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useResource } from '../../hooks/useResource'
 import type { Dealer } from '../../types/dealer'
 import { statusLabels } from '../../utils/statusLabels'
+import { FilterX } from 'lucide-react'
+import { IconAction } from '../shared/IconAction'
 
 export function AssuranceFilters({ dates = false, defaultStatus = '', tasks = false }: { dates?: boolean; defaultStatus?: string; tasks?: boolean }) {
   const [params, setParams] = useSearchParams()
@@ -19,6 +21,6 @@ export function AssuranceFilters({ dates = false, defaultStatus = '', tasks = fa
     <label><span id="filter-dealer-label">Dealer</span><select aria-labelledby="filter-dealer-label" name="dealer_id" disabled={!dealers.data} value={params.get('dealer_id') ?? ''} onChange={e => change('dealer_id', e.target.value)}><option value="">Semua dealer dalam lingkup</option>{dealers.data?.map(dealer => <option key={dealer.id} value={dealer.id}>{dealer.name}</option>)}</select></label>
     {dates && <><label>Dibuat mulai (WIB)<input type="date" value={params.get('date_from') ?? ''} onChange={e => change('date_from', e.target.value)} /></label><label>Dibuat sampai (WIB)<input type="date" value={params.get('date_to') ?? ''} onChange={e => change('date_to', e.target.value)} /></label></>}
     {dealers.error && <p className="error">Pilihan dealer gagal dimuat. <button onClick={() => void dealers.reload()}>Muat ulang dealer</button></p>}
-    <button className="secondary" onClick={() => setParams(defaultStatus ? { status: '' } : {})}>Hapus filter</button>
+    <IconAction label="Hapus filter" icon={FilterX} onClick={() => setParams(defaultStatus ? { status: '' } : {})} />
   </div>
 }

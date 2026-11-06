@@ -19,7 +19,4 @@ details > summary { cursor:pointer; font-weight:650; min-height:44px; padding-bl
 .secondary.danger-action { border-color:#FCA5A5; color:#DC2626; background:white; }
 .secondary.danger-action:not(:disabled):hover { background:#FEF2F2; border-color:#EF4444; color:#B91C1C; }
 .application-actions a, .actions > a { min-height:44px; display:inline-flex; align-items:center; }
-.setup-flow ol { display:flex; flex-wrap:wrap; gap:12px 24px; list-style:none; padding:0; }
-.setup-flow a { display:inline-flex; min-height:44px; align-items:center; font-weight:500; }
-.setup-flow a[aria-current=step] { font-weight:700; color:var(--primary); }
 @media(max-width:1023px) { .review-workspace { grid-template-columns:1fr; } .viewer-canvas { height:360px; } }

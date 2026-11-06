@@ -1,0 +1,8 @@
+.icon-action-wrap { display:inline-flex; flex:0 0 auto; vertical-align:middle; }
+.icon-action,.data-table .icon-action { display:inline-flex; align-items:center; justify-content:center; width:44px; min-width:44px; height:44px; min-height:44px; padding:0; border-radius:8px; text-decoration:none; }
+.icon-action svg { flex-shrink:0; }
+.icon-action:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+.icon-action:disabled { pointer-events:none; }
+.icon-action.danger-outline:not(:disabled):hover { color:var(--danger); border-color:var(--danger); }
+.icon-action-tooltip { position:fixed; z-index:100; width:max-content; max-width:min(280px,calc(100vw - 16px)); padding:6px 10px; border-radius:6px; background:var(--sidebar); color:white; box-shadow:var(--shadow-md); font-size:12px; line-height:1.5; overflow-wrap:anywhere; transform:translateX(-50%); }
+.icon-action-tooltip.above { transform:translate(-50%,-100%); }

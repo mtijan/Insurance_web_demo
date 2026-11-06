@@ -4,6 +4,7 @@
 @import './styles/forms.css';
 @import './styles/review.css';
 @import './styles/master.css';
+@import './styles/actions.css';
 
 :root {
   --canvas: #F8FAFC;
