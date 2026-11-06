@@ -11,7 +11,7 @@ export function StepDealer({ dealer, ...fields }: StepProps & { dealer?: Dealer 
       {!dealer && <DealerSelection {...fields} />}
       <div className="field"><label htmlFor="vehicle_category" id="category-label">Kategori motor</label><select id="vehicle_category" aria-labelledby="category-label" value={fields.values.vehicle_category} onChange={e => fields.change('vehicle_category', e.target.value)}><option value="MOTOR_BARU">Motor Baru</option><option value="MOTOR_LAMA">Motor Lama</option></select></div>
     </div>
-    <p className="muted">Perubahan tersimpan setelah Simpan draft berhasil.</p>
+    <p className="muted">Draft disimpan saat Anda memilih Lanjut ke Dokumen pada langkah Jaminan & premi.</p>
   </section>
 }
 function DealerSelection({ values, errors, change }: StepProps) {

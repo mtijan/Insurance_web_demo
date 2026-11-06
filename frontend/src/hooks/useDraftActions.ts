@@ -13,6 +13,7 @@ export function useDraftActions(fields: ReturnType<typeof useWizardFields>, init
   const operation = useOperation()
   async function save() {
     if (!fields.valid(true) || uncertain) return
+    if (detail && !fields.dirty) { operation.setError(''); fields.setStep(3); return }
     setNotice('')
     const result = await operation.run(async () => saveDraft(fields.values, detail?.id))
     if (result.ok) { setDetail(result.data); fields.accept(result.data); setNotice('Draft tersimpan di server.'); fields.setStep(3) }

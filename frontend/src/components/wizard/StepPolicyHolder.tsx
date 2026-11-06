@@ -7,5 +7,5 @@ export function StepPolicyHolder({ values, errors, change, validate }: StepProps
     <Field name="policy_holder_nik" label="NIK" inputMode="numeric" autoComplete="off" value={values.policy_holder_nik} error={errors.policy_holder_nik} hint="Tepat 16 digit; nol di depan dipertahankan. Validasi format saja." onChange={e => change('policy_holder_nik', e.target.value)} onBlur={() => validate('policy_holder_nik')} />
     <Field name="policy_holder_phone" label="Telepon (opsional)" type="tel" autoComplete="off" maxLength={20} value={values.policy_holder_phone} error={errors.policy_holder_phone} onChange={e => change('policy_holder_phone', e.target.value)} />
     <label>Alamat (opsional)<textarea name="policy_holder_address" autoComplete="off" value={values.policy_holder_address} onChange={e => change('policy_holder_address', e.target.value)} /></label>
-  </div><p className="muted">Isian berada di memori halaman sampai Simpan draft berhasil. Tidak ada autosave.</p></section>
+  </div><p className="muted">Isian disimpan saat Anda memilih Lanjut ke Dokumen pada langkah Jaminan & premi.</p></section>
 }

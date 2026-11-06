@@ -4,18 +4,18 @@ import { ConfirmDialog } from '../shared/ConfirmDialog'
 type Props = { session: ReturnType<typeof useWizardSession> }
 
 export function WizardActions({ session }: Props) {
-  const { fields, actions, busy, editable } = session
+  const { fields, busy, editable } = session
   if (!editable) return null
   return <div className="actions">
     <button className="secondary" disabled={busy || fields.step === 0} onClick={() => fields.setStep(n => n - 1)}>Kembali</button>
     <NextStep session={session} />
-    {fields.step >= 2 && <button className="secondary" disabled={busy || actions.uncertain} onClick={() => void actions.save()}>{actions.busy ? 'Memproses…' : 'Simpan draft'}</button>}
     <SubmitStep session={session} />
   </div>
 }
 function NextStep({ session: { fields, actions, busy } }: Props) {
   if (fields.step >= 4) return null
-  const locked = busy || (fields.step >= 2 && fields.dirty) || (fields.step === 2 && !actions.detail)
+  if (fields.step === 2) return <button disabled={busy || actions.uncertain} onClick={() => void actions.save()}>{actions.busy ? 'Menyimpan draft…' : 'Lanjut ke Dokumen'}</button>
+  const locked = busy || (fields.step >= 3 && fields.dirty)
   return <button disabled={locked} onClick={() => { if (fields.valid()) fields.setStep(n => n + 1) }}>Lanjut ke {steps[fields.step + 1]}</button>
 }
 function SubmitStep({ session: { fields, locked, setConfirm } }: Props) {

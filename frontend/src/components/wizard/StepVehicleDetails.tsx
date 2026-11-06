@@ -14,5 +14,5 @@ export function StepVehicleDetails(props: StepProps) {
     <label><span id="tenor-label">Tenor (tahun)</span><select id="tenor_years" aria-labelledby="tenor-label" value={values.tenor_years} onChange={e => change('tenor_years', e.target.value)}>{[1, 2, 3, 4, 5].map(n => <option key={n}>{n}</option>)}</select></label>
     <Field name="period_start" label="Tanggal mulai" type="date" value={values.period_start} error={errors.period_start} onChange={e => change('period_start', e.target.value)} />
     <Field name="issuance_year" label="Tahun terbit jaminan" inputMode="numeric" value={values.issuance_year} error={errors.issuance_year} onChange={e => change('issuance_year', e.target.value)} />
-  </div>{premium.valid && <Feedback {...premium} retry={premium.reload} />}{premium.data && <PremiumSummaryCard premium={premium.data} tenorYears={Number(values.tenor_years)} />}<p className="muted">Tanggal akhir dihitung otomatis saat draft disimpan. Simpan draft untuk melanjutkan ke Dokumen.</p></section>
+  </div>{premium.valid && <Feedback {...premium} retry={premium.reload} />}{premium.data && <PremiumSummaryCard premium={premium.data} tenorYears={Number(values.tenor_years)} />}<p className="muted">Pilih Lanjut ke Dokumen untuk menyimpan draft dan menghitung tanggal akhir secara otomatis.</p></section>
 }

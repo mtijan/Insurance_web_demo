@@ -4,7 +4,7 @@ import { DealerApplicationFilters } from '../components/assurances/DealerApplica
 import { DealerApplicationRow } from '../components/assurances/DealerApplicationRow'
 
 const modes = {
-  drafts: { title: 'Draft', unit: 'draft', intro: 'Pengajuan yang tersimpan dan belum dikirim. Buka draft untuk melanjutkan pengisian.', empty: 'Belum ada draft', hint: 'Lengkapi form Buat pengajuan, lalu pilih Simpan draft.' },
+  drafts: { title: 'Draft', unit: 'draft', intro: 'Pengajuan yang tersimpan dan belum dikirim. Buka draft untuk melanjutkan pengisian.', empty: 'Belum ada draft', hint: 'Lengkapi form Buat pengajuan, lalu pilih Lanjut ke Dokumen untuk menyimpan draft.' },
   progress: { title: 'Proses pengajuan', unit: 'pengajuan', intro: 'Pantau tahap pemeriksaan, perbaikan yang diminta, dan hasil pengajuan dealer Anda.', empty: 'Tidak ada pengajuan untuk ditampilkan', hint: 'Pengajuan yang sudah dikirim akan muncul di sini. Periksa juga filter status yang dipilih.' },
 }
 
