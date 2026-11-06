@@ -11,6 +11,7 @@
 .wizard-steps [aria-current=step] { background:#EFF6FF; color:var(--primary); font-weight:700; border-color:#3B82F6; box-shadow:0 1px 3px 0 rgba(37, 99, 235, 0.12); }
 .wizard-steps [aria-current=step]>span { background:var(--primary); color:white; border-color:var(--primary); }
 .premium-card { background:linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border:1px solid #BFDBFE; padding:20px; margin:24px 0 0; border-radius:12px; box-shadow:var(--shadow-xs); }
+.premium-periods { padding-top:16px; border-top:1px solid var(--control-border); }
 .document-checklist { list-style:none; padding:0; }
 .document-checklist li { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:14px 0; border-bottom:1px solid var(--border); }
 fieldset { min-width:0; border:0; padding:0; margin:0; }
