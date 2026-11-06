@@ -15,7 +15,6 @@
 details > summary { cursor:pointer; font-weight:650; min-height:44px; padding-block:8px; color:var(--text); }
 .data-disclosure > .panel { margin-bottom:0; border:0; padding:0; box-shadow:none; }
 #inspection { scroll-margin-top:24px; }
-.task-metrics .metric { border-top:3px solid var(--primary); }
 .status-REJECTED { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
 .secondary.danger-action { border-color:#FCA5A5; color:#DC2626; background:white; }
 .secondary.danger-action:not(:disabled):hover { background:#FEF2F2; border-color:#EF4444; color:#B91C1C; }

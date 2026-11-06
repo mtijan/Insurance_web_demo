@@ -14,7 +14,7 @@ export function AssurancesPage({ review = false, inspection = false }: { review?
   const query = new URLSearchParams(params)
   query.delete('task')
   if (mode.defaultStatus && !params.has('status')) query.set('status', mode.defaultStatus)
-  const resource = useResource<AssuranceRow[]>(`assurances/?${query}`)
+  const resource = useResource<AssuranceRow[]>(query.size ? `assurances/?${query}` : 'assurances/')
   const rows = (resource.data ?? []).filter(row => isTask(row, params.get('task')))
   return <section aria-busy={resource.loading}>
     <div className="page-heading"><div><p className="eyebrow">Operasional</p><h1>{mode.title}</h1></div></div>

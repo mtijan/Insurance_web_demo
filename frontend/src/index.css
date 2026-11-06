@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import './styles/shell.css';
 @import './styles/content.css';
@@ -167,8 +166,8 @@ input:focus, select:focus {
   overflow-wrap: anywhere;
   transition: all 150ms ease;
 }
-.document-slot.ready { border-top: 4px solid #10B981; }
-.document-slot.missing { border-top: 4px solid #EF4444; }
+.document-slot.ready { border-top: 4px solid #177245; }
+.document-slot.missing { border-top: 4px solid #B4232C; }
 .document-slot figure { margin: 1rem 0; }
 .document-slot img { display: block; width: 100%; height: 200px; object-fit: contain; background: #F1F5F9; border-radius: .5rem; margin: .75rem 0; }
 .document-slot input { font-size: .875rem; }

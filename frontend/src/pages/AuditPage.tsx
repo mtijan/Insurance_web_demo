@@ -23,19 +23,19 @@ export function AuditPage() {
   }, [page, attempt])
   function move(step: number) { setBusy(true); setPage(value => value + step) }
   return <section aria-busy={busy}>
-    <h1>Riwayat audit</h1>
+    <div className="page-heading"><div><p className="eyebrow">Administrasi</p><h1>Riwayat audit</h1></div></div>
     <p>Ringkasan aktivitas sistem. Isi perubahan, IP, dan data pribadi tidak ditampilkan.</p>
     {busy && <p role="status">Memuat riwayat…</p>}
     {error && <div role="alert"><p>{error}</p><button onClick={() => { setBusy(true); setAttempt(value => value + 1) }}>Coba lagi</button></div>}
-    {!busy && !error && !entries.length && <p>Belum ada catatan audit.</p>}
-    <ul className="assurance-list">{!busy && !error && entries.map(entry => <li key={entry.id}>
-      <strong>{entry.action} · {entry.entity_name}</strong><span>{entry.entity_id}</span>
-      <time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</time>
+    {!busy && !error && !entries.length && <p className="panel">Belum ada catatan audit.</p>}
+    <ul className="assurance-list audit-list">{!busy && !error && entries.map(entry => <li key={entry.id}>
+      <div className="audit-row-main"><strong>{entry.action} · {entry.entity_name}</strong><span className="code-badge">{entry.entity_id}</span></div>
+      <time className="audit-time" dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</time>
     </li>)}</ul>
-    <nav aria-label="Halaman audit" className="toolbar">
-      <button disabled={busy || page === 1} onClick={() => move(-1)}>Sebelumnya</button>
+    <nav aria-label="Halaman audit" className="toolbar audit-pagination">
+      <button className="secondary" disabled={busy || page === 1} onClick={() => move(-1)}>Sebelumnya</button>
       <span aria-live="polite">Halaman {page}</span>
-      <button disabled={busy || !next} onClick={() => move(1)}>Berikutnya</button>
+      <button className="secondary" disabled={busy || !next} onClick={() => move(1)}>Berikutnya</button>
     </nav>
   </section>
 }

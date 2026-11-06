@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { ChevronDown, FolderKanban } from 'lucide-react'
 import { useAuth } from '../../auth/authState'
 import { navigationFor } from './navigation'
 import { LogoutButton } from './LogoutButton'
@@ -12,15 +13,17 @@ export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: bool
   return <>
     <div className="sidebar-brand" aria-label="Kevin Assurance"><span aria-hidden="true">KA</span>{!collapsed && <strong>Kevin Assurance<small>Jaminan kendaraan</small></strong>}</div>
     <nav aria-label="Navigasi utama">
-      {['Operasional', 'Master data', 'Administrasi'].filter(group => items.some(item => item.group === group)).map(group => <section key={group} aria-label={group}>
-        <h2 className={collapsed ? 'sr-only' : 'nav-group'}>{group}</h2>
-        {items.filter(item => item.group === group).map(item => <div className="nav-item" key={item.to} onKeyDown={event => { if (event.key === 'Escape') setDismissed(item.to) }} onBlur={() => setDismissed('')} onMouseLeave={() => setDismissed('')}>
-          {item.ready ? <Link to={item.to} onClick={onNavigate} aria-label={collapsed ? item.label : undefined}
-            aria-current={activeRoute(item.to, pathname) ? 'page' : undefined} className={activeRoute(item.to, pathname) ? 'active' : undefined}>
-            <item.icon size={20} aria-hidden="true" />{!collapsed && <span>{item.label}</span>}
-          </Link> : <span className="nav-unavailable" aria-label={`${item.label}: belum tersedia`}><item.icon size={20} aria-hidden="true" />{!collapsed && <span>{item.label}<small>Belum tersedia</small></span>}</span>}
-          {collapsed && <span className="nav-tooltip" role="tooltip" hidden={dismissed === item.to}>{item.label}{!item.ready && ' · Belum tersedia'}</span>}
-        </div>)}
+      {['Operasional', 'Master data', 'Administrasi'].filter(group => items.some(item => item.group === group)).map(group => <section className="nav-section" key={group} aria-label={group}>
+        <h2 className={collapsed ? 'sr-only' : 'nav-group'}><span className="nav-group-title"><FolderKanban size={15} aria-hidden="true" /><span>{group}</span></span><ChevronDown size={14} aria-hidden="true" /></h2>
+        <div className="nav-submenu">
+          {items.filter(item => item.group === group).map(item => <div className="nav-item" key={item.to} onKeyDown={event => { if (event.key === 'Escape') setDismissed(item.to) }} onBlur={() => setDismissed('')} onMouseLeave={() => setDismissed('')}>
+            {item.ready ? <Link to={item.to} onClick={onNavigate} aria-label={collapsed ? item.label : undefined}
+              aria-current={activeRoute(item.to, pathname) ? 'page' : undefined} className={activeRoute(item.to, pathname) ? 'active' : undefined}>
+              <item.icon size={18} aria-hidden="true" />{!collapsed && <span>{item.label}</span>}
+            </Link> : <span className="nav-unavailable" aria-label={`${item.label}: belum tersedia`}><item.icon size={18} aria-hidden="true" />{!collapsed && <span>{item.label}<small>Belum tersedia</small></span>}</span>}
+            {collapsed && <span className="nav-tooltip" role="tooltip" hidden={dismissed === item.to}>{item.label}{!item.ready && ' · Belum tersedia'}</span>}
+          </div>)}
+        </div>
       </section>)}
     </nav>
     <footer className="sidebar-footer">{!collapsed && <p>{user?.username}<small>{user?.role.replaceAll('_', ' ')}</small></p>}<LogoutButton compact={collapsed} /></footer>
