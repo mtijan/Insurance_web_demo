@@ -1,0 +1,114 @@
+.auth-page {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 12% 26%, rgba(136, 19, 55, 0.045) 0%, transparent 44%),
+    radial-gradient(circle at 88% 78%, rgba(190, 18, 60, 0.05) 0%, transparent 42%),
+    var(--canvas);
+}
+
+.auth-page .brand {
+  position: relative;
+  z-index: 2;
+}
+
+.auth-page main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  display: grid;
+  align-content: center;
+}
+
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  top: 64px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.auth-motif {
+  position: absolute;
+  color: var(--primary);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.auth-motif-left {
+  left: max(-24px, calc((100% - 1360px) / 2));
+  bottom: 0;
+  width: clamp(220px, 27vw, 360px);
+  height: auto;
+}
+
+.auth-motif-right {
+  right: max(-24px, calc((100% - 1360px) / 2));
+  bottom: 0;
+  width: clamp(220px, 28vw, 380px);
+  height: auto;
+}
+
+.auth-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: auth-spin 52s linear infinite;
+}
+
+.auth-spin-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: auth-spin-rev 64s linear infinite;
+}
+
+.auth-sway {
+  transform-box: fill-box;
+  transform-origin: bottom left;
+  animation: auth-sway 9s ease-in-out infinite alternate;
+}
+
+.auth-drift {
+  transform-box: fill-box;
+  transform-origin: bottom right;
+  animation: auth-drift 11s ease-in-out infinite alternate;
+}
+
+@keyframes auth-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes auth-spin-rev {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes auth-sway {
+  from { transform: rotate(-1.6deg) translateY(0); }
+  to { transform: rotate(1.8deg) translateY(-6px); }
+}
+
+@keyframes auth-drift {
+  from { transform: rotate(1.4deg) translateY(0); }
+  to { transform: rotate(-1.8deg) translateY(-8px); }
+}
+
+@media (max-width: 768px) {
+  .auth-motif {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-spin,
+  .auth-spin-rev,
+  .auth-sway,
+  .auth-drift {
+    animation: none;
+  }
+}
