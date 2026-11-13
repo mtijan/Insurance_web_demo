@@ -1,8 +1,11 @@
-import { createBrowserRouter, createRoutesFromElements, Navigate, Outlet, Route, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createRoutesFromElements, Navigate, Outlet, Route, RouterProvider, useLocation } from 'react-router-dom'
 import { lazy } from 'react'
 import { AuthProvider } from './auth/AuthContext'
+import { useAuth } from './auth/authState'
 import { ProtectedRoute } from './auth/ProtectedRoute'
+import { isWorkspaceRole } from './utils/roleLabels'
 import { AppLayout } from './components/layout/AppLayout'
+import { AuthBackdrop } from './components/auth/AuthBackdrop'
 import { LoginPage } from './pages/LoginPage'
 import { AssurancesPage } from './pages/AssurancesPage'
 import { AssuranceDetailPage } from './pages/AssuranceDetailPage'
@@ -24,7 +27,14 @@ function Root() {
   </AuthProvider>
 }
 function AuthLayout() {
-  return <><header className="brand">Kevin Assurance <span>Pengelolaan jaminan kendaraan</span></header><main id="main" tabIndex={-1}><Outlet /></main></>
+  return <div className="auth-page"><header className="brand">Kevin Assurance <span>Pengelolaan jaminan kendaraan</span></header><AuthBackdrop /><main id="main" tabIndex={-1}><Outlet /></main></div>
+}
+function HomeRoute() {
+  const { user } = useAuth()
+  const { search } = useLocation()
+  if (user?.role === 'DEALER') return <Navigate to="/assurances/new" replace />
+  if (isWorkspaceRole(user?.role)) return <Navigate to={`/dealers${search}`} replace />
+  return <AssurancesPage />
 }
 const router = createBrowserRouter(createRoutesFromElements(
   <Route element={<Root />}>
@@ -34,7 +44,7 @@ const router = createBrowserRouter(createRoutesFromElements(
       </Route>
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route index element={<AssurancesPage />} />
+            <Route index element={<HomeRoute />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/dealers" element={<DealersPage />} />
             <Route path="/assurances/new" element={<AssuranceFormPage />} />

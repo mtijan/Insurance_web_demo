@@ -1,5 +1,7 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useResource } from '../hooks/useResource'
+import { safeBackTarget } from '../utils/roleLabels'
 import type { AssuranceDetail } from '../types/assurance'
 import { Feedback } from '../components/shared/Feedback'
 import { SplitScreenViewer } from '../components/review/SplitScreenViewer'
@@ -16,10 +18,12 @@ export function AdminReviewPage() {
   return <ReviewWorkspace key={id} id={id!} />
 }
 function ReviewWorkspace({ id }: { id: string }) {
+  const { state } = useLocation()
+  const backTo = safeBackTarget(state, '/review')
   const resource = useResource<AssuranceDetail>(`assurances/${id}/`)
   const review = useReviewDecision(id, resource.reload)
   const inspection = useInspection(id, resource.reload)
-  return <section aria-busy={resource.loading}><Link to="/review">Kembali ke antrean verifikasi</Link><h1>Verifikasi pengajuan</h1>
+  return <section aria-busy={resource.loading}><Link className="back-link" to={backTo}><ArrowLeft size={16} aria-hidden="true" />{backTo.startsWith('/dealers') ? 'Kembali ke dealer & jaminan' : 'Kembali ke antrean verifikasi'}</Link><h1>Verifikasi pengajuan</h1>
     <Feedback {...resource} retry={resource.reload} />
     {review.success && <p role="status" className="notice">{review.success}</p>}
     {inspection.success && <p role="status">{inspection.success}</p>}

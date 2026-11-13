@@ -2,14 +2,13 @@ import { LayoutDashboard, List, FilePlus, FilePenLine, ClipboardList, ScanSearch
 import type { Role } from '../../types/auth'
 import { dealerTitle } from '../../utils/roleLabels'
 
-const all: Role[] = ['SUPER_ADMIN', 'ADMIN', 'AGENT', 'DEALER']
 const internal: Role[] = ['SUPER_ADMIN', 'ADMIN', 'AGENT']
 const reviewers: Role[] = ['SUPER_ADMIN', 'ADMIN']
 const owner: Role[] = ['SUPER_ADMIN']
 export const navigation = [
   { group: 'Operasional', label: 'Ringkasan', to: '/dashboard', icon: LayoutDashboard, roles: internal, ready: true },
-  { group: 'Operasional', label: 'Daftar jaminan', to: '/', icon: List, roles: internal, ready: true },
-  { group: 'Operasional', label: 'Buat pengajuan', to: '/assurances/new', icon: FilePlus, roles: all, ready: true },
+  { group: 'Operasional', label: 'Daftar jaminan', to: '/', icon: List, roles: owner, ready: true },
+  { group: 'Operasional', label: 'Buat pengajuan', to: '/assurances/new', icon: FilePlus, roles: ['SUPER_ADMIN', 'DEALER'] as Role[], ready: true },
   { group: 'Operasional', label: 'Draft', to: '/assurances/drafts', icon: FilePenLine, roles: ['DEALER'] as Role[], ready: true },
   { group: 'Operasional', label: 'Proses pengajuan', to: '/assurances/progress', icon: ClipboardList, roles: ['DEALER'] as Role[], ready: true },
   { group: 'Operasional', label: 'Peninjauan', to: '/inspection', icon: ScanSearch, roles: ['AGENT'] as Role[], ready: true },
@@ -25,8 +24,8 @@ export const navigation = [
 export function navigationFor(role: Role) {
   const orders: Partial<Record<Role, string[]>> = {
     DEALER: ['/assurances/new', '/assurances/drafts', '/assurances/progress'],
-    AGENT: ['/dashboard', '/inspection', '/', '/dealers', '/assurances/new'],
-    ADMIN: ['/dashboard', '/review', '/', '/assurances/new', '/dealers'],
+    AGENT: ['/dashboard', '/inspection', '/dealers'],
+    ADMIN: ['/dashboard', '/review', '/dealers'],
     SUPER_ADMIN: ['/dashboard', '/review', '/', '/assurances/new'],
   }
   const order = orders[role] ?? []

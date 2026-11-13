@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Pencil, Plus, Trash2, UserPlus } from 'lucide-react'
 import { useAuth } from '../auth/authState'
 import { useResource } from '../hooks/useResource'
 import type { Dealer } from '../types/dealer'
@@ -6,20 +7,26 @@ import { Feedback } from '../components/shared/Feedback'
 import { DataTable } from '../components/shared/DataTable'
 import { DealerEditor } from '../components/master/DealerEditor'
 import { DeleteConfirmation } from '../components/shared/DeleteConfirmation'
-import { Pencil, Trash2, UserPlus } from 'lucide-react'
 import { IconAction } from '../components/shared/IconAction'
-import { dealerTitle } from '../utils/roleLabels'
+import { dealerTitle, isWorkspaceRole } from '../utils/roleLabels'
 import type { Role } from '../types/auth'
+import { DealerWorkspacePage } from './DealerWorkspacePage'
 
 export function DealersPage() {
-  const { user } = useAuth(), resource = useResource<Dealer[]>('dealers/')
+  const { user } = useAuth()
+  if (user && isWorkspaceRole(user.role)) return <DealerWorkspacePage role={user.role} />
+  return <DealerTableView role={user?.role} />
+}
+function DealerTableView({ role }: { role?: Role }) {
+  const resource = useResource<Dealer[]>('dealers/')
   const [editing, setEditing] = useState<Dealer | 'new' | null>(null), [removing, setRemoving] = useState<Dealer | null>(null)
-  const owner = user?.role === 'SUPER_ADMIN'
-  return <section aria-busy={resource.loading}><div className="page-heading"><DealerHeading role={user?.role} />{owner && <button onClick={() => setEditing('new')}>Tambah dealer</button>}</div>
+  const owner = role === 'SUPER_ADMIN'
+  return <section aria-busy={resource.loading}><div className="page-heading"><DealerHeading role={role} />{owner && <button onClick={() => setEditing('new')}><Plus size={18} aria-hidden="true" />Tambah dealer</button>}</div>
     <p>{owner ? 'Kelola data dealer dan akun yang terhubung.' : 'Informasi dealer yang dapat Anda akses. Pengelolaan dilakukan oleh Super Admin.'}</p><Feedback {...resource} retry={resource.reload} />
     {resource.data && !resource.data.length && <p className="panel">Belum ada dealer dalam lingkup akun.</p>}
     {!!resource.data?.length && <DataTable rows={resource.data} label="Daftar dealer" columns={[
-      { label: 'Kode', render: d => <span className="code-badge">{d.code}</span> }, { label: 'Nama', render: d => d.name }, { label: 'Status', render: d => <span className={`badge ${d.is_active ? 'status-ACTIVE' : 'status-INACTIVE'}`}>{d.is_active ? 'Aktif' : 'Nonaktif'}</span> },
+      { label: 'Kode', render: d => <span className="code-badge">{d.code}</span> }, { label: 'Nama', render: d => d.name },
+      { label: 'Status', render: d => <span className={`badge ${d.is_active ? 'status-ACTIVE' : 'status-INACTIVE'}`}><span className="status-dot" aria-hidden="true" />{d.is_active ? 'Aktif' : 'Nonaktif'}</span> },
       { label: 'Aksi', render: d => owner ? <div className="actions"><IconAction label={`Buat akun Dealer ${d.code}`} icon={UserPlus} to={`/admin/users?dealer=${d.id}`} /><IconAction label={`Ubah ${d.code}`} icon={Pencil} onClick={() => setEditing(d)} /><IconAction label={`Hapus ${d.code}`} icon={Trash2} danger onClick={() => setRemoving(d)} /></div> : <span className="badge">Hanya baca</span> },
     ]} />}
     {editing && <DealerEditor initial={editing === 'new' ? undefined : editing} close={() => setEditing(null)} done={resource.reload} />}

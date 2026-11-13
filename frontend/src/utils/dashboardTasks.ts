@@ -8,8 +8,8 @@ export function isTask(row: AssuranceRow, task: string | null) {
 }
 export function dashboardTasks(role: Role) {
   if (role === 'DEALER') return [
-    { label: 'Perlu Anda perbaiki', to: '/?status=REVISION', status: 'REVISION', task: null },
-    { label: 'Draft belum dikirim', to: '/?status=DRAFT', status: 'DRAFT', task: null },
+    { label: 'Perlu Anda perbaiki', to: '/assurances/progress?status=REVISION', status: 'REVISION', task: null },
+    { label: 'Draft belum dikirim', to: '/assurances/drafts', status: 'DRAFT', task: null },
   ]
   if (role === 'AGENT') return [
     { label: 'Pengajuan untuk ditinjau', to: '/inspection', status: 'SUBMITTED', task: null },

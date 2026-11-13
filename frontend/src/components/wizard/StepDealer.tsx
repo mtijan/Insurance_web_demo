@@ -1,12 +1,15 @@
 import { useState } from 'react'
+import { useAuth } from '../../auth/authState'
 import { useResource } from '../../hooks/useResource'
 import type { Dealer } from '../../types/dealer'
 import type { StepProps } from '../../types/wizard'
 import { Feedback } from '../shared/Feedback'
 
 export function StepDealer({ dealer, ...fields }: StepProps & { dealer?: Dealer }) {
+  const { user } = useAuth()
+  const note = user?.role === 'DEALER' ? 'Dealer mengikuti akun Anda secara otomatis.' : 'Dealer dipilih dari workspace dan terikat pada pengajuan ini.'
   return <section className="panel"><h2>{dealer ? 'Kategori motor' : 'Dealer & kategori'}</h2>
-    {dealer && <p className="muted">Pengajuan dari {dealer.code} · {dealer.name}. Dealer mengikuti akun Anda secara otomatis.</p>}
+    {dealer && <p className="muted">Pengajuan dari {dealer.code} · {dealer.name}. {note}</p>}
     <div className="form-grid">
       {!dealer && <DealerSelection {...fields} />}
       <div className="field"><label htmlFor="vehicle_category" id="category-label">Kategori motor</label><select id="vehicle_category" aria-labelledby="category-label" value={fields.values.vehicle_category} onChange={e => fields.change('vehicle_category', e.target.value)}><option value="MOTOR_BARU">Motor Baru</option><option value="MOTOR_LAMA">Motor Lama</option></select></div>

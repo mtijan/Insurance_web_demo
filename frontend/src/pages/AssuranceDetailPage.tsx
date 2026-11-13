@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, FilePenLine, ScanSearch, ShieldCheck } from 'lucide-react'
 import { useResource } from '../hooks/useResource'
 import type { AssuranceDetail } from '../types/assurance'
 import { Feedback } from '../components/shared/Feedback'
@@ -12,6 +13,8 @@ import { useInspection } from '../hooks/useInspection'
 import { ApplicationOverview } from '../components/assurances/ApplicationOverview'
 import { ReviewHistory } from '../components/review/ReviewHistory'
 import { DocumentPreviewProvider } from '../components/documents/DocumentPreviewProvider'
+import { DraftDeleteAction } from '../components/assurances/DraftDeleteAction'
+import { assuranceReturnLabel, assuranceReturnPath, safeBackTarget } from '../utils/roleLabels'
 
 export function AssuranceDetailPage() {
   const { id } = useParams()
@@ -19,14 +22,17 @@ export function AssuranceDetailPage() {
 }
 function DetailWorkspace({ id }: { id: string }) {
   const { user } = useAuth()
+  const { state } = useLocation()
+  const navigate = useNavigate()
   const resource = useResource<AssuranceDetail>(`assurances/${id}/`)
   const inspection = useInspection(id, resource.reload)
   const current = resource.data
+  const backTo = safeBackTarget(state, assuranceReturnPath(user?.role, current?.dealer.id, current?.status))
   return <section aria-busy={resource.loading}>
-    <Link to="/">Kembali ke daftar jaminan</Link><h1>Detail pengajuan</h1>
+    <Link className="back-link" to={backTo}><ArrowLeft size={16} aria-hidden="true" />{assuranceReturnLabel(user?.role)}</Link><h1>Detail pengajuan</h1>
     <Feedback {...resource} retry={resource.reload} />
     {current && <>
-      <ApplicationOverview detail={current}><DetailActions detail={current} role={user?.role} /></ApplicationOverview>
+      <ApplicationOverview detail={current}><DetailActions detail={current} role={user?.role} backTo={backTo} onDeleted={() => navigate(backTo, { replace: true })} /></ApplicationOverview>
       <ReviewProgress detail={current} />
       {current.status === 'SUBMITTED' && user?.role === 'AGENT' && <InspectionPanel detail={current} admin={false} review={inspection} />}
       {current.status !== 'SUBMITTED' && inspection.success && <p role="status">{inspection.success}</p>}
@@ -38,11 +44,12 @@ function DetailWorkspace({ id }: { id: string }) {
     </>}
   </section>
 }
-function DetailActions({ detail, role }: { detail: AssuranceDetail; role?: string }) {
+function DetailActions({ detail, role, backTo, onDeleted }: { detail: AssuranceDetail; role?: string; backTo: string; onDeleted: () => void }) {
   return <>
-    {detail.can_edit && <Link className="download" to={`/assurances/${detail.id}/edit`}>{detail.status === 'REVISION' ? 'Perbaiki pengajuan' : 'Lanjutkan pengajuan'}</Link>}
+    {detail.can_edit && <Link className="download" to={`/assurances/${detail.id}/edit`} state={{ backTo }}><FilePenLine size={18} aria-hidden="true" />{detail.status === 'REVISION' ? 'Perbaiki pengajuan' : 'Lanjutkan pengajuan'}</Link>}
+    {detail.can_delete_draft && <DraftDeleteAction id={detail.id} name={detail.policy_holder.full_name} done={async () => onDeleted()} />}
     {detail.status === 'ACTIVE' && <PdfDownload id={detail.id} />}
-    {detail.status === 'SUBMITTED' && role === 'AGENT' && <a className="download" href="#inspection">Tinjau pengajuan</a>}
-    {detail.status === 'SUBMITTED' && (role === 'ADMIN' || role === 'SUPER_ADMIN') && <Link className="download" to={`/review/${detail.id}`}>Verifikasi pengajuan</Link>}
+    {detail.status === 'SUBMITTED' && role === 'AGENT' && <a className="download" href="#inspection"><ScanSearch size={18} aria-hidden="true" />Tinjau pengajuan</a>}
+    {detail.status === 'SUBMITTED' && (role === 'ADMIN' || role === 'SUPER_ADMIN') && <Link className="download" to={`/review/${detail.id}`} state={{ backTo }}><ShieldCheck size={18} aria-hidden="true" />Verifikasi pengajuan</Link>}
   </>
 }
