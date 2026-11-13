@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Pencil, Trash2, UserPlus } from 'lucide-react'
 import { useResource } from '../../hooks/useResource'
 import type { ManagedUser } from '../../types/master'
 import type { Dealer } from '../../types/dealer'
@@ -6,8 +8,6 @@ import { Feedback } from '../../components/shared/Feedback'
 import { DataTable } from '../../components/shared/DataTable'
 import { UserEditor } from '../../components/master/UserEditor'
 import { DeleteConfirmation } from '../../components/shared/DeleteConfirmation'
-import { Link, useSearchParams } from 'react-router-dom'
-import { Pencil, Trash2 } from 'lucide-react'
 import { IconAction } from '../../components/shared/IconAction'
 
 export function UsersPage() {
@@ -16,7 +16,7 @@ export function UsersPage() {
   const [created, setCreated] = useState<ManagedUser | null>(null)
   const [params] = useSearchParams()
   const defaultDealer = dealers.data?.find(d => d.id === params.get('dealer'))
-  return <section aria-busy={resource.loading}><div className="page-heading"><div><p className="eyebrow">Master data</p><h1>Pengguna</h1></div><button disabled={!dealers.data} onClick={() => setEditing('new')}>Tambah pengguna</button></div>
+  return <section aria-busy={resource.loading}><div className="page-heading"><div><p className="eyebrow">Master data</p><h1>Pengguna</h1></div><button disabled={!dealers.data} onClick={() => setEditing('new')}><UserPlus size={18} aria-hidden="true" />Tambah pengguna</button></div>
     {defaultDealer && <p className="notice">Siapkan akun Dealer untuk {defaultDealer.name}. Pilih Tambah pengguna untuk melanjutkan.</p>}
     <CreatedAccountNotice user={created} />
     <p>Password awal diberikan oleh Super Admin. Pengguna wajib menggantinya saat login. Nonaktif/reset mencabut sesi lama.</p>
@@ -33,7 +33,7 @@ export function UsersPage() {
 }
 function UserStatusBadge({ user }: { user: ManagedUser }) {
   const tone = !user.is_active ? 'status-INACTIVE' : user.must_change_password ? 'status-REVISION' : 'status-ACTIVE'
-  return <span className={`badge ${tone}`}>{`${user.is_active ? 'Aktif' : 'Nonaktif'}${user.must_change_password ? ' · Wajib ganti password' : ''}`}</span>
+  return <span className={`badge ${tone}`}><span className="status-dot" aria-hidden="true" />{`${user.is_active ? 'Aktif' : 'Nonaktif'}${user.must_change_password ? ' · Wajib ganti password' : ''}`}</span>
 }
 function CreatedAccountNotice({ user }: { user: ManagedUser | null }) {
   if (!user) return null

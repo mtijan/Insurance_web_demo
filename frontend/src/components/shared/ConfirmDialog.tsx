@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 export function ConfirmDialog({ title, children, close, busy = false }: { title: string; children: ReactNode; close: () => void; busy?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -15,5 +16,5 @@ export function ConfirmDialog({ title, children, close, busy = false }: { title:
     const first = items[0], last = items[items.length - 1]
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
     if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
-  }}><h2 id="dialog-title">{title}</h2><button className="secondary" autoFocus disabled={busy} onClick={close}>Batal</button>{children}</dialog>
+  }}><h2 id="dialog-title">{title}</h2><button className="secondary" autoFocus disabled={busy} onClick={close}><X size={16} aria-hidden="true" />Batal</button>{children}</dialog>
 }

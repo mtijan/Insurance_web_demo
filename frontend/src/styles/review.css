@@ -4,7 +4,7 @@
 .viewer { min-width:0; }
 .viewer-tools { gap:8px; margin:16px 0; }
 .viewer-tools button { font-size:14px; padding:8px 12px; }
-.viewer-canvas { height:420px; overflow:auto; background:#F1F5F9; margin:16px 0; border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05); }
+.viewer-canvas { height:420px; overflow:auto; background:var(--surface-subtle); margin:16px 0; border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05); }
 .viewer-stage { aspect-ratio:1; position:relative; }
 .viewer-canvas img { max-width:none; transform-origin:center; display:block; position:absolute; top:50%; left:50%; border-radius:6px; box-shadow:var(--shadow-md); }
 .review-history { padding-inline-start:24px; }
@@ -18,5 +18,5 @@ details > summary { cursor:pointer; font-weight:650; min-height:44px; padding-bl
 .status-REJECTED { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
 .secondary.danger-action { border-color:#FCA5A5; color:#DC2626; background:white; }
 .secondary.danger-action:not(:disabled):hover { background:#FEF2F2; border-color:#EF4444; color:#B91C1C; }
-.application-actions a, .actions > a { min-height:44px; display:inline-flex; align-items:center; }
+.application-actions a, .actions > a { min-height:44px; display:inline-flex; align-items:center; gap:8px; }
 @media(max-width:1023px) { .review-workspace { grid-template-columns:1fr; } .viewer-canvas { height:360px; } }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { FileSpreadsheet } from 'lucide-react'
 import { fetchBinary, saveBlob } from '../../services/downloads'
 import { useOperation } from '../../hooks/useOperation'
 
@@ -12,5 +13,5 @@ export function ExcelExportButton() {
       saveBlob(result.data, 'rekapitulasi-jaminan.xlsx'); setSuccess(true)
     }
   }
-  return <div className="panel"><button disabled={operation.busy} onClick={() => void download()}>{operation.busy ? 'Menyiapkan Excel…' : 'Unduh Excel sesuai filter'}</button>{operation.error && <p role="alert" className="error">{operation.error}</p>}{success && <p role="status">Berkas Excel diterima dari server dan unduhan dimulai.</p>}</div>
+  return <div className="panel"><button disabled={operation.busy} onClick={() => void download()}><FileSpreadsheet size={18} aria-hidden="true" />{operation.busy ? 'Menyiapkan Excel…' : 'Unduh Excel sesuai filter'}</button>{operation.error && <p role="alert" className="error">{operation.error}</p>}{success && <p role="status">Berkas Excel diterima dari server dan unduhan dimulai.</p>}</div>
 }

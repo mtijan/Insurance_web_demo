@@ -1,3 +1,4 @@
+import { RefreshCw } from 'lucide-react'
 import { useDealerApplications } from '../hooks/useDealerApplications'
 import { Feedback } from '../components/shared/Feedback'
 import { DealerApplicationFilters } from '../components/assurances/DealerApplicationFilters'
@@ -13,13 +14,16 @@ export function DealerApplicationsPage({ drafts = false }: { drafts?: boolean })
   const mode = drafts ? modes.drafts : modes.progress
   return <section aria-busy={resource.loading}>
     <div className="page-heading"><div><p className="eyebrow">Operasional</p><h1>{mode.title}</h1></div>
-      <button className="secondary" disabled={resource.loading} onClick={() => void resource.reload()}>Perbarui status</button>
+      <button className="secondary" disabled={resource.loading} onClick={() => void resource.reload()}><RefreshCw size={16} aria-hidden="true" />Perbarui status</button>
     </div>
     <p>{mode.intro}</p>
     {!drafts && <DealerApplicationFilters />}
     <Feedback {...resource} retry={resource.reload} />
     {resource.data && !rows.length && <div className="panel"><h2>{mode.empty}</h2><p>{mode.hint}</p></div>}
-    <ul className="assurance-list">{rows.map(row => <DealerApplicationRow key={row.id} row={row} />)}</ul>
+    {!!rows.length && <div className="record-table-card">
+      <div className="record-table-head" aria-hidden="true"><span>Tertanggung</span><span>Nomor & tanggal</span><span>Total premi</span><span>Status & tahap</span><span>Aksi</span></div>
+      <ul className="assurance-list">{rows.map(row => <DealerApplicationRow key={row.id} row={row} />)}</ul>
+    </div>}
     {resource.data && <p className="muted">{rows.length} {mode.unit} dimuat dalam lingkup dealer Anda.</p>}
   </section>
 }

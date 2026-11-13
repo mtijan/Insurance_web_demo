@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import { KeyRound, LogIn, LogOut } from 'lucide-react'
 import { useAuth } from '../auth/authState'
 import { useAuthForm } from '../auth/useAuthForm'
 
@@ -20,9 +21,9 @@ function AuthCard({ change, form, sessionError, changed }: { change: boolean; fo
     {changed && <p role="status">Password berhasil diganti. Silakan masuk kembali.</p>}
     {error && <p className="error" role="alert" tabIndex={-1} ref={errorRef}>{error}</p>}
     <form onSubmit={submit} aria-busy={busy}><LoginFields change={change} />
-      <button disabled={busy} type="submit">{busy ? 'Memproses…' : change ? 'Simpan password baru' : 'Masuk'}</button>
+      <button disabled={busy} type="submit">{change ? <KeyRound size={18} aria-hidden="true" /> : <LogIn size={18} aria-hidden="true" />}{busy ? 'Memproses…' : change ? 'Simpan password baru' : 'Masuk'}</button>
     </form>
-    {change && <button className="secondary" disabled={busy} onClick={() => void exit()}>Keluar</button>}
+    {change && <button className="secondary" disabled={busy} onClick={() => void exit()}><LogOut size={16} aria-hidden="true" />Keluar</button>}
   </section>
 }
 function AuthIntro({ change }: { change: boolean }) {

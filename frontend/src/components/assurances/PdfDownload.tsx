@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileDown } from 'lucide-react'
 import { errorMessage } from '../../services/apiClient'
 import { fetchBinary, saveBlob } from '../../services/downloads'
 
@@ -12,5 +13,5 @@ export function PdfDownload({ id }: { id: string }) {
       saveBlob(blob, 'ringkasan-jaminan.pdf')
     } catch (failure) { setError(errorMessage(failure)) } finally { setBusy(false) }
   }
-  return <><button disabled={busy} onClick={() => void download()}>{busy ? 'Menyiapkan PDF…' : 'Unduh ringkasan jaminan (PDF)'}</button>{error && <p role="alert" className="error">{error}</p>}</>
+  return <><button disabled={busy} onClick={() => void download()}><FileDown size={18} aria-hidden="true" />{busy ? 'Menyiapkan PDF…' : 'Unduh ringkasan jaminan (PDF)'}</button>{error && <p role="alert" className="error">{error}</p>}</>
 }

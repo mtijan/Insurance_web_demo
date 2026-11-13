@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useResource } from '../../hooks/useResource'
 import type { Assignment, ManagedUser } from '../../types/master'
 import type { Dealer } from '../../types/dealer'
@@ -6,8 +8,6 @@ import { Feedback } from '../../components/shared/Feedback'
 import { DataTable } from '../../components/shared/DataTable'
 import { AssignmentEditor } from '../../components/master/AssignmentEditor'
 import { DeleteConfirmation } from '../../components/shared/DeleteConfirmation'
-import { useSearchParams } from 'react-router-dom'
-import { Pencil, Trash2 } from 'lucide-react'
 import { IconAction } from '../../components/shared/IconAction'
 
 export function AssignmentsPage() {
@@ -16,7 +16,7 @@ export function AssignmentsPage() {
   const ready = users.data && dealers.data
   const [params] = useSearchParams()
   const selectedAgent = users.data?.find(u => u.id === params.get('agent') && u.role === 'AGENT')
-  return <section aria-busy={resource.loading}><div className="page-heading"><div><p className="eyebrow">Master data</p><h1>Penugasan agent</h1></div><button disabled={!ready} onClick={() => setEditing('new')}>Tambah penugasan</button></div>
+  return <section aria-busy={resource.loading}><div className="page-heading"><div><p className="eyebrow">Master data</p><h1>Penugasan agent</h1></div><button disabled={!ready} onClick={() => setEditing('new')}><Plus size={18} aria-hidden="true" />Tambah penugasan</button></div>
     <p>Hubungkan akun Agent yang sudah dibuat dengan dealer binaannya. Satu Agent dapat memiliki beberapa penugasan.</p>
     <AssignmentNotice user={selectedAgent} />
     <Feedback {...resource} retry={resource.reload} /><Feedback {...users} retry={users.reload} /><Feedback {...dealers} retry={dealers.reload} />

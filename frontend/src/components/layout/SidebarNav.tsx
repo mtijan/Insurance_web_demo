@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ChevronDown, FolderKanban } from 'lucide-react'
 import { useAuth } from '../../auth/authState'
 import { navigationFor } from './navigation'
 import { LogoutButton } from './LogoutButton'
@@ -10,11 +9,12 @@ export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: bool
   const { pathname } = useLocation()
   const [dismissed, setDismissed] = useState('')
   const items = user ? navigationFor(user.role) : []
+  const initials = (user?.username ?? 'KA').slice(0, 2).toUpperCase()
   return <>
     <div className="sidebar-brand" aria-label="Kevin Assurance"><span aria-hidden="true">KA</span>{!collapsed && <strong>Kevin Assurance<small>Jaminan kendaraan</small></strong>}</div>
     <nav aria-label="Navigasi utama">
       {['Operasional', 'Master data', 'Administrasi'].filter(group => items.some(item => item.group === group)).map(group => <section className="nav-section" key={group} aria-label={group}>
-        <h2 className={collapsed ? 'sr-only' : 'nav-group'}><span className="nav-group-title"><FolderKanban size={15} aria-hidden="true" /><span>{group}</span></span><ChevronDown size={14} aria-hidden="true" /></h2>
+        <h2 className={collapsed ? 'sr-only' : 'nav-group'}>{group}</h2>
         <div className="nav-submenu">
           {items.filter(item => item.group === group).map(item => <div className="nav-item" key={item.to} onKeyDown={event => { if (event.key === 'Escape') setDismissed(item.to) }} onBlur={() => setDismissed('')} onMouseLeave={() => setDismissed('')}>
             {item.ready ? <Link to={item.to} onClick={onNavigate} aria-label={collapsed ? item.label : undefined}
@@ -26,7 +26,10 @@ export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: bool
         </div>
       </section>)}
     </nav>
-    <footer className="sidebar-footer">{!collapsed && <p>{user?.username}<small>{user?.role.replaceAll('_', ' ')}</small></p>}<LogoutButton compact={collapsed} /></footer>
+    <footer className="sidebar-footer">
+      {!collapsed && <div className="sidebar-user-card"><span className="sidebar-user-avatar" aria-hidden="true">{initials}</span><p>{user?.username}<small>{user?.role.replaceAll('_', ' ')}</small></p></div>}
+      <LogoutButton compact={collapsed} />
+    </footer>
   </>
 }
 function activeRoute(target: string, path: string) {

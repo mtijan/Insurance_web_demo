@@ -1,3 +1,4 @@
+import { CheckCircle2, Play, RotateCcw, Save } from 'lucide-react'
 import { useInspection } from '../../hooks/useInspection'
 import type { AssuranceDetail } from '../../types/assurance'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
@@ -13,9 +14,9 @@ export function InspectionPanel({ detail, admin, review }: { detail: AssuranceDe
       <label>Catatan kekurangan<textarea ref={review.notesRef} name="inspection_notes" autoComplete="off" maxLength={2000} value={review.notes} onChange={e => review.setNotes(e.target.value)} disabled={locked} /></label>
       <p>Jelaskan nama kolom atau jenis berkas dan perbaikan yang diperlukan. Catatan dapat dilihat Dealer. Catatan saja tidak mengubah status.</p>
       {review.error && <p role="alert" className="error">{review.error}</p>}
-      <div className="actions"><button type="submit" disabled={locked}>Simpan catatan</button><button type="button" className="secondary" disabled={locked} onClick={review.requestRevision}>Minta perbaikan</button></div>
+      <div className="actions"><button type="submit" disabled={locked}><Save size={16} aria-hidden="true" />Simpan catatan</button><button type="button" className="secondary" disabled={locked} onClick={review.requestRevision}><RotateCcw size={16} aria-hidden="true" />Minta perbaikan</button></div>
     </form>
-    {review.mustReload && <button onClick={() => void review.refresh()}>Muat ulang peninjauan</button>}
+    {review.mustReload && <button onClick={() => void review.refresh()}><RotateCcw size={16} aria-hidden="true" />Muat ulang peninjauan</button>}
     {review.confirmRevision && <RevisionConfirmation review={review} />}
   </section>
 }
@@ -23,10 +24,10 @@ export function InspectionPanel({ detail, admin, review }: { detail: AssuranceDe
 function VerificationActions({ detail, review }: { detail: AssuranceDetail; review: ReturnType<typeof useInspection> }) {
   const locked = review.busy || review.mustReload
   return <div className="actions">
-    <button className="secondary" disabled={locked || detail.data_verified} onClick={() => void review.submit('START', 'DATA')}>Mulai verifikasi data</button>
-    <button className="secondary" disabled={locked || detail.data_verified} onClick={() => void review.submit('VERIFY', 'DATA')}>Tandai data terverifikasi</button>
-    <button className="secondary" disabled={locked || !detail.data_verified || detail.documents_verified} onClick={() => void review.submit('START', 'DOCUMENTS')}>Mulai verifikasi berkas</button>
-    <button className="secondary" disabled={locked || !detail.data_verified || detail.documents_verified} onClick={() => void review.submit('VERIFY', 'DOCUMENTS')}>Tandai berkas terverifikasi</button>
+    <button className="secondary" disabled={locked || detail.data_verified} onClick={() => void review.submit('START', 'DATA')}><Play size={15} aria-hidden="true" />Mulai verifikasi data</button>
+    <button className="secondary" disabled={locked || detail.data_verified} onClick={() => void review.submit('VERIFY', 'DATA')}><CheckCircle2 size={15} aria-hidden="true" />Tandai data terverifikasi</button>
+    <button className="secondary" disabled={locked || !detail.data_verified || detail.documents_verified} onClick={() => void review.submit('START', 'DOCUMENTS')}><Play size={15} aria-hidden="true" />Mulai verifikasi berkas</button>
+    <button className="secondary" disabled={locked || !detail.data_verified || detail.documents_verified} onClick={() => void review.submit('VERIFY', 'DOCUMENTS')}><CheckCircle2 size={15} aria-hidden="true" />Tandai berkas terverifikasi</button>
   </div>
 }
 
@@ -34,7 +35,7 @@ function RevisionConfirmation({ review }: { review: ReturnType<typeof useInspect
   return <ConfirmDialog title="Kembalikan pengajuan ke Dealer?" busy={review.busy} close={() => review.setConfirmRevision(false)}>
     <p>Dealer perlu memperbaiki bagian {sectionLabels[review.section]} lalu mengirim ulang. Catatan: {review.notes || 'Belum diisi'}</p>
     {review.error && <p role="alert" className="error">{review.error}</p>}
-    <button disabled={review.busy || review.mustReload} onClick={() => void review.submit('REQUEST_REVISION')}>Konfirmasi pengembalian</button>
-    {review.mustReload && <button onClick={() => void review.refresh()}>Muat ulang peninjauan</button>}
+    <button disabled={review.busy || review.mustReload} onClick={() => void review.submit('REQUEST_REVISION')}><RotateCcw size={16} aria-hidden="true" />Konfirmasi pengembalian</button>
+    {review.mustReload && <button onClick={() => void review.refresh()}><RotateCcw size={16} aria-hidden="true" />Muat ulang peninjauan</button>}
   </ConfirmDialog>
 }
