@@ -13,12 +13,14 @@ export interface AssuranceRow {
   verification_stage: string
   data_verified: boolean
   documents_verified: boolean
+  can_delete_draft?: boolean
 }
 export interface Document { id: string; document_type: string; view_url: string; file_size: number; original_filename: string }
 export interface AssuranceDetail {
   id: string
   status: string
   can_edit: boolean
+  can_delete_draft?: boolean
   policy_holder: { full_name: string; nik: string; phone: string; address: string }
   dealer: Dealer
   documents: Document[]
