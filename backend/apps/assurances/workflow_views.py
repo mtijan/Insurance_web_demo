@@ -1,12 +1,13 @@
 from django.http import HttpResponse
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.assurances.selectors.assurance_filters import filter_assurances
 from apps.assurances.serializers import AssuranceDetailSerializer
+from apps.assurances.services.assurance_service import delete_assurance_draft
 from apps.assurances.services.workflow_service import (
     review_assurance, submit_assurance_application,
 )
@@ -68,4 +69,8 @@ class AssuranceWorkflowMixin:
         return filter_assurances(queryset, self.request.query_params)
 
     def destroy(self, request, *args, **kwargs):
-        raise MethodNotAllowed("DELETE")
+        delete_assurance_draft(self.get_object(), request.user)
+        return Response({
+            "success": True,
+            "message": "Assurance draft deleted successfully.",
+        }, status=status.HTTP_200_OK)

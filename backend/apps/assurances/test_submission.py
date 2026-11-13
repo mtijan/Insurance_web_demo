@@ -124,7 +124,7 @@ class SubmissionTests(AssuranceFeatureTestCase):
         self.assertEqual(response.status_code, 400)
         document = assurance.documents.first()
         self.assertEqual(self.client.delete(f"{url}documents/{document.pk}/").status_code, 400)
-        self.assertEqual(self.client.delete(url).status_code, 405)
+        self.assertEqual(self.client.delete(url).status_code, 400)
 
     def test_stale_draft_instance_cannot_bypass_submitted_state(self):
         from apps.assurances.services.assurance_service import update_assurance_draft

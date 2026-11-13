@@ -7,10 +7,18 @@ from rest_framework.exceptions import ValidationError
 
 from apps.assurances.models import AssuranceStatus, PolicyHolder, VehicleAssurance
 from apps.assurances.services.pricing_calculator import calculate_premium
-from apps.assurances.services.workflow_validation import require_editable, require_mutation_access
+from apps.assurances.services.workflow_validation import (
+    require_delete_draft_access,
+    require_draft_deletable,
+    require_editable,
+    require_mutation_access,
+)
 from apps.audit.services.audit_service import record_audit
 from apps.configs.services.config_service import get_admin_fee
 from apps.assurances.services.input_validation import validate_draft_input
+from apps.documents.services.vault_lock import vault_write_lock
+from apps.documents.services.vault_paths import resolve_vault_path
+from apps.documents.services.vault_service import remove_vault_file
 
 
 def calculate_end_date(start_date: datetime.date, tenor_years: int) -> datetime.date:
@@ -127,3 +135,32 @@ def validate_draft_fields(data, pricing):
         raise ValidationError({"issuance_year": "Use a four-digit year (1000-9999)."})
     if pricing["total_premium"] <= 0 or pricing["total_premium"] > Decimal("9999999999.99"):
         raise ValidationError({"sum_insured": "Calculated premium exceeds the supported amount."})
+
+
+def remove_vault_files(paths):
+    for relative in paths:
+        remove_vault_file(relative)
+
+
+def delete_assurance_draft(assurance, user):
+    with vault_write_lock(), transaction.atomic(durable=True):
+        locked = (
+            VehicleAssurance.objects.select_for_update()
+            .select_related("policy_holder")
+            .get(pk=assurance.pk)
+        )
+        require_delete_draft_access(locked, user)
+        require_draft_deletable(locked)
+        holder = locked.policy_holder
+        paths = list(locked.documents.values_list("file_path", flat=True))
+        for relative in paths:
+            resolve_vault_path(relative)
+        record_audit(
+            user, "DELETE", "VEHICLE_ASSURANCE", locked.pk,
+            {"dealer_id": str(locked.dealer_id), "status": {"old": locked.status, "new": None}},
+        )
+        locked.delete()
+        if not holder.assurances.exists():
+            holder.delete()
+        if paths:
+            transaction.on_commit(lambda items=paths: remove_vault_files(items))

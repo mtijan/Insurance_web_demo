@@ -37,6 +37,23 @@ def require_editable(assurance):
         raise ValidationError("Only DRAFT or REVISION assurances may be changed.")
 
 
+def require_delete_draft_access(assurance, user):
+    if not user.is_active or user.is_dealer:
+        raise PermissionDenied("Only authorized internal roles may delete a draft.")
+    if user.is_super_admin or user.is_admin_user:
+        return
+    if user.is_agent and user.dealer_assignments.filter(
+        dealer_id=assurance.dealer_id,
+    ).exists():
+        return
+    raise PermissionDenied("User does not have delete access for this dealer.")
+
+
+def require_draft_deletable(assurance):
+    if assurance.status != AssuranceStatus.DRAFT:
+        raise ValidationError("Only DRAFT assurances may be deleted.")
+
+
 def validate_submission_data(assurance):
     try:
         assurance.policy_holder.full_clean()

@@ -2,6 +2,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from apps.assurances.models import (
+    AssuranceStatus,
     PolicyHolder,
     VehicleAssurance,
     VehicleCategory,
@@ -64,11 +65,31 @@ class AssuranceDraftCreateSerializer(serializers.Serializer):
     issuance_year = serializers.IntegerField(required=False, min_value=1000, max_value=9999)
 
 
+def agent_assigned_dealer_ids(request):
+    cached = getattr(request, "_assigned_dealer_ids", None)
+    if cached is None:
+        cached = set(request.user.dealer_assignments.values_list("dealer_id", flat=True))
+        request._assigned_dealer_ids = cached
+    return cached
+
+
+def compute_can_delete_draft(obj, request) -> bool:
+    if request is None or obj.status != AssuranceStatus.DRAFT:
+        return False
+    user = getattr(request, "user", None)
+    if not (user and user.is_authenticated and user.is_active) or user.is_dealer:
+        return False
+    if user.is_super_admin or user.is_admin_user:
+        return True
+    return user.is_agent and obj.dealer_id in agent_assigned_dealer_ids(request)
+
+
 class AssuranceListSerializer(serializers.ModelSerializer):
     policy_holder_name = serializers.CharField(source="policy_holder.full_name", read_only=True)
     policy_holder_nik = serializers.CharField(source="policy_holder.nik", read_only=True)
     dealer_code = serializers.CharField(source="dealer.code", read_only=True)
     dealer_name = serializers.CharField(source="dealer.name", read_only=True)
+    can_delete_draft = serializers.SerializerMethodField()
 
     class Meta:
         model = VehicleAssurance
@@ -87,8 +108,12 @@ class AssuranceListSerializer(serializers.ModelSerializer):
             "verification_stage",
             "data_verified",
             "documents_verified",
+            "can_delete_draft",
             "created_at",
         ]
+
+    def get_can_delete_draft(self, obj) -> bool:
+        return compute_can_delete_draft(obj, self.context.get("request"))
 
 
 class ReviewEventSerializer(serializers.ModelSerializer):
@@ -100,6 +125,7 @@ class ReviewEventSerializer(serializers.ModelSerializer):
 
 class AssuranceDetailSerializer(serializers.ModelSerializer):
     can_edit = serializers.SerializerMethodField()
+    can_delete_draft = serializers.SerializerMethodField()
     policy_holder = PolicyHolderSerializer(read_only=True)
     dealer = DealerSummarySerializer(read_only=True)
     documents = AssuranceDocumentSerializer(many=True, read_only=True)
@@ -140,6 +166,7 @@ class AssuranceDetailSerializer(serializers.ModelSerializer):
             "is_documents_complete",
             "missing_documents",
             "can_edit",
+            "can_delete_draft",
         ]
 
     def get_required_documents(self, obj: VehicleAssurance) -> list:
@@ -155,6 +182,9 @@ class AssuranceDetailSerializer(serializers.ModelSerializer):
         except APIException:
             return False
         return True
+
+    def get_can_delete_draft(self, obj) -> bool:
+        return compute_can_delete_draft(obj, self.context.get("request"))
 
     def get_is_documents_complete(self, obj: VehicleAssurance) -> bool:
         uploaded_types = available_document_types(obj)

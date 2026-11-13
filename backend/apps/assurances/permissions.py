@@ -15,20 +15,19 @@ class AssuranceAccessPermission(BasePermission):
         user = request.user
         if not (user and user.is_authenticated):
             return False
-
         if user.is_super_admin or user.is_admin_user:
             return True
-
+        if request.method == "DELETE" and getattr(view, "action", None) == "destroy":
+            return user.is_agent and self.has_dealer_scope(user, obj)
         if request.method in SAFE_METHODS:
             return self.has_dealer_scope(user, obj)
+        return self.can_mutate_object(user, obj)
 
-        # Mutation: only allowed for creator in DRAFT or REVISION
+    def can_mutate_object(self, user, obj) -> bool:
         if obj.status not in (AssuranceStatus.DRAFT, AssuranceStatus.REVISION):
             return False
-
         if obj.created_by_id != user.id:
             return False
-
         return self.has_dealer_scope(user, obj)
 
     def has_dealer_scope(self, user, obj):
