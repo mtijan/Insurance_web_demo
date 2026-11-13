@@ -5,13 +5,14 @@ import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { sectionLabels } from '../../utils/reviewLabels'
 
 export function InspectionPanel({ detail, admin, review }: { detail: AssuranceDetail; admin: boolean; review: ReturnType<typeof useInspection> }) {
+  const { notesRef } = review
   const locked = review.busy || review.mustReload
   return <section id="inspection" tabIndex={-1} className="panel" aria-label="Peninjauan pengajuan"><h2>Peninjauan data dan berkas</h2>
     {!admin && review.success && <p role="status">{review.success}</p>}
     {admin && <VerificationActions detail={detail} review={review} />}
     <form noValidate onSubmit={event => { event.preventDefault(); void review.submit('NOTE') }}>
       <label>Bagian yang ditinjau<select value={review.section} disabled={locked} onChange={e => review.setSection(e.target.value)}><option value="DATA">Data pengajuan</option><option value="DOCUMENTS">Berkas</option><option value="GENERAL">Umum</option></select></label>
-      <label>Catatan kekurangan<textarea ref={review.notesRef} name="inspection_notes" autoComplete="off" maxLength={2000} value={review.notes} onChange={e => review.setNotes(e.target.value)} disabled={locked} /></label>
+      <label>Catatan kekurangan<textarea ref={notesRef} name="inspection_notes" autoComplete="off" maxLength={2000} value={review.notes} onChange={e => review.setNotes(e.target.value)} disabled={locked} /></label>
       <p>Jelaskan nama kolom atau jenis berkas dan perbaikan yang diperlukan. Catatan dapat dilihat Dealer. Catatan saja tidak mengubah status.</p>
       {review.error && <p role="alert" className="error">{review.error}</p>}
       <div className="actions"><button type="submit" disabled={locked}><Save size={16} aria-hidden="true" />Simpan catatan</button><button type="button" className="secondary" disabled={locked} onClick={review.requestRevision}><RotateCcw size={16} aria-hidden="true" />Minta perbaikan</button></div>
