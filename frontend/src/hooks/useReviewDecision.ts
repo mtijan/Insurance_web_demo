@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../services/apiClient'
+import { notifyNotificationsChanged } from '../services/notifications'
 import { useOperation } from './useOperation'
 import type { AssuranceDetail } from '../types/assurance'
 import type { Envelope } from '../types/auth'
@@ -18,7 +19,7 @@ export function useReviewDecision(id: string, reload: () => Promise<unknown>) {
     })
     if (result.ok) {
       setSuccess(result.data.status === 'ACTIVE' ? `Jaminan aktif. Nomor: ${result.data.assurance_number}` : result.data.status === 'REJECTED' ? 'Pengajuan ditolak final. Alasan tersimpan.' : 'Permintaan perbaikan tersimpan. Status: Perlu perbaikan.')
-      setDecision(null); setNotes(''); await reload()
+      setDecision(null); setNotes(''); notifyNotificationsChanged(); await reload()
     } else setMustReload(true)
   }
   async function refresh() { await reload(); setMustReload(false); setDecision(null); operation.setError('') }

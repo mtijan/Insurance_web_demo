@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { api } from '../services/apiClient'
+import { notifyNotificationsChanged } from '../services/notifications'
 import { useOperation } from './useOperation'
 
 export function useInspection(id: string, reload: () => Promise<unknown>) {
@@ -17,7 +18,7 @@ export function useInspection(id: string, reload: () => Promise<unknown>) {
     if (result.ok) {
       setMustReload(false)
       setSuccess(action === 'REQUEST_REVISION' ? 'Permintaan perbaikan dikirim ke Dealer.' : 'Hasil peninjauan tersimpan.')
-      setNotes(''); setConfirmRevision(false); await reload()
+      setNotes(''); setConfirmRevision(false); notifyNotificationsChanged(); await reload()
     } else setMustReload(true)
   }
   async function refresh() { await reload(); setMustReload(false); setConfirmRevision(false); operation.setError('') }

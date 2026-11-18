@@ -2,6 +2,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { api, errorMessage } from '../services/apiClient'
 import { getAssurance, saveDraft } from '../services/assurances'
+import { notifyNotificationsChanged } from '../services/notifications'
 import type { AssuranceDetail } from '../types/assurance'
 import { useOperation } from './useOperation'
 import type { useWizardFields } from './useWizardFields'
@@ -31,7 +32,7 @@ export function useDraftActions(fields: ReturnType<typeof useWizardFields>, init
       await api.post(`assurances/${detail.id}/submit/`)
       return getAssurance(detail.id)
     })
-    if (result.ok) { setDetail(result.data); setNotice('Pengajuan berhasil dikirim untuk verifikasi.') }
+    if (result.ok) { setDetail(result.data); setNotice('Pengajuan berhasil dikirim untuk verifikasi.'); notifyNotificationsChanged() }
     else { operation.setError('Hasil pengiriman belum dapat dipastikan. Muat ulang status sebelum mencoba lagi.'); await reload() }
   }
   return { detail, notice, uncertain, ...operation, save, reload, submit }
