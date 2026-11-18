@@ -4,6 +4,7 @@ import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useAuth } from '../../auth/authState'
 import { SidebarNav } from './SidebarNav'
 import { MobileDrawer } from './MobileDrawer'
+import { NotificationBell } from './NotificationBell'
 import { NavigationSafety } from './navigationSafety'
 import type { SafetyState } from './navigationSafety'
 
@@ -30,7 +31,12 @@ export function AppLayout() {
         <button className="secondary mobile-trigger" aria-expanded={open} aria-label="Buka menu" onClick={() => setDrawerKey(location.key)}><Menu size={20} aria-hidden="true" /><span>Menu</span></button>
         <button className="secondary desktop-trigger" aria-expanded={!collapsed} aria-label={collapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'} onClick={() => setCollapsed(value => !value)}>{collapsed ? <PanelLeftOpen size={18} aria-hidden="true" /> : <PanelLeftClose size={18} aria-hidden="true" />}</button>
         <span className="context-header-title">Ruang kerja Kevin Assurance <small>Pengelolaan jaminan kendaraan</small></span>
-        {user && <span className="header-role-pill">{user.role.replaceAll('_', ' ')}</span>}
+        {user && (
+          <div className="context-header-actions">
+            {!user.must_change_password && <NotificationBell user={user} />}
+            <span className="header-role-pill">{user.role.replaceAll('_', ' ')}</span>
+          </div>
+        )}
       </header>
       <main id="main" tabIndex={-1}><Suspense fallback={<p role="status">Memuat halaman…</p>}><Outlet /></Suspense></main>
     </div>

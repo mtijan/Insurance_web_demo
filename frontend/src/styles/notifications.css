@@ -1,0 +1,43 @@
+.context-header-actions { margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.context-header-actions .header-role-pill { margin-left:0; }
+.context-header-title { min-width:0; flex:1 1 auto; }
+.notif-wrap { position:relative; }
+.context-header button.notif-bell-btn { position:relative; min-width:44px; min-height:44px; justify-content:center; padding:8px; }
+.notif-count { position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px; border-radius:9999px; background:var(--primary); color:#FFFFFF; border:2px solid #FFFFFF; font-size:11px; font-weight:700; line-height:16px; text-align:center; font-variant-numeric:tabular-nums; }
+.notif-popover { position:absolute; right:0; top:calc(100% + 8px); width:min(380px, calc(100vw - 32px)); max-height:min(72dvh, 480px); display:flex; flex-direction:column; background:#FFFFFF; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-lg); z-index:40; overflow:hidden; }
+.notif-popover-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid var(--border); background:var(--surface-subtle); }
+.notif-popover-head h2 { margin:0; font-size:14px; font-weight:700; color:var(--text); }
+.context-header button.notif-mark-all-btn { min-height:36px; padding:6px 10px; font-size:12px; gap:6px; width:auto; }
+.context-header button.notif-retry-btn { min-height:36px; padding:6px 12px; font-size:12.5px; width:auto; }
+.notif-list { list-style:none; margin:0; padding:0; overflow-y:auto; }
+.notif-item + .notif-item { border-top:1px solid var(--border); }
+.context-header button.notif-item-btn { width:100%; min-height:44px; text-align:left; background:#FFFFFF; color:var(--text); border:0; border-radius:0; padding:12px 14px; display:flex; flex-direction:column; align-items:stretch; gap:5px; cursor:pointer; }
+.notif-item.unread .context-header button.notif-item-btn,.context-header .notif-item.unread button.notif-item-btn { background:var(--primary-soft); border-left:3px solid var(--primary); }
+.context-header button.notif-item-btn:not(:disabled):hover { background:#FBF1F3; border-color:transparent; color:var(--text); }
+.context-header button.notif-item-btn:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
+.notif-item-top { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; color:var(--text); }
+.notif-new-badge { padding:2px 7px; border-radius:9999px; background:var(--primary); color:#FFFFFF; font-size:10.5px; font-weight:700; flex-shrink:0; }
+.notif-item-msg { font-size:12.5px; color:var(--text); line-height:1.45; overflow-wrap:anywhere; }
+.notif-item-time { font-size:11.5px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+.notif-state { margin:0; padding:18px 14px; font-size:13px; color:var(--text-muted); display:grid; gap:10px; justify-items:start; }
+.notes-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.notes-header h2 { margin:0 0 4px; }
+.notes-header p { margin:0; }
+.notes-thread { list-style:none; margin:0 0 18px; padding:0; display:grid; gap:10px; }
+.note-entry { border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:var(--surface-subtle); display:grid; gap:6px; }
+.note-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12.5px; color:var(--text-muted); }
+.note-meta strong { color:var(--text); }
+.note-body { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; color:var(--text); }
+.note-form { display:grid; gap:8px; padding-top:14px; border-top:1px solid var(--border); }
+.note-form-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.note-role-SUPER_ADMIN { background:#F5EFF1; color:#7F102E; border-color:#FECDD3; }
+.note-role-ADMIN { background:#EFF6FF; color:#1E40AF; border-color:#BFDBFE; }
+.note-role-AGENT { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+.note-role-DEALER { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
+@media(max-width:639px) {
+ .context-header { padding:10px 12px; gap:8px; }
+ .context-header small { display:none; }
+ .context-header-title { font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+ .header-role-pill { font-size:10.5px; padding:4px 8px; }
+ .notif-popover { position:fixed; left:12px; right:12px; top:66px; width:auto; }
+}

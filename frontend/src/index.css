@@ -6,6 +6,7 @@
 @import './styles/master.css';
 @import './styles/actions.css';
 @import './styles/auth.css';
+@import './styles/notifications.css';
 
 :root {
   --canvas: #FBF8F9;
