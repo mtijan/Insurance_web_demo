@@ -1,5 +1,5 @@
 import uuid
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.db.models.functions import Lower
 
@@ -11,10 +11,21 @@ class UserRole(models.TextChoices):
     DEALER = "DEALER", "Dealer Staff"
 
 
+class CustomUserManager(UserManager):
+    use_in_migrations = True
+
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields["role"] = UserRole.SUPER_ADMIN
+        extra_fields["is_staff"] = True
+        extra_fields["is_superuser"] = True
+        return super().create_superuser(username, email=email, password=password, **extra_fields)
+
+
 class CustomUser(AbstractUser):
     """
     Custom User model with UUID primary key and Role-Based Access Control (RBAC).
     """
+    objects = CustomUserManager()
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     role = models.CharField(
         max_length=20,
@@ -48,7 +59,7 @@ class CustomUser(AbstractUser):
 
     @property
     def is_super_admin(self) -> bool:
-        return self.role == UserRole.SUPER_ADMIN or self.is_superuser
+        return self.role == UserRole.SUPER_ADMIN
 
     @property
     def is_admin_user(self) -> bool:

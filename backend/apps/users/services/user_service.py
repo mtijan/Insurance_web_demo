@@ -9,11 +9,22 @@ from apps.audit.services.audit_service import record_audit
 from apps.users.models import CustomUser, UserRole
 
 
-def validate_user(user, password=None):
+def sync_role_flags(user):
+    user.is_superuser = user.role == UserRole.SUPER_ADMIN
+    user.is_staff = user.role in (UserRole.SUPER_ADMIN, UserRole.ADMIN)
+
+
+def validate_user_role_links(user):
     if user.role == UserRole.DEALER and not user.dealer_id:
         raise ValidationError({"dealer": "A dealer account must be associated with a dealer."})
+    if user.role != UserRole.DEALER and user.dealer_id:
+        raise ValidationError({"dealer": "Only DEALER accounts may belong to a dealer."})
     if user.dealer_assignments.exists() and user.role != UserRole.AGENT:
         raise ValidationError({"role": "Remove agent assignments before changing this role."})
+
+
+def validate_user(user, password=None):
+    validate_user_role_links(user)
     if CustomUser.objects.exclude(pk=user.pk).filter(email__iexact=user.email).exists():
         raise ValidationError({"email": "This email is already registered."})
     try:
@@ -28,6 +39,7 @@ def apply_fields(user, data):
     for name, value in data.items():
         if name != "password":
             setattr(user, name, value)
+    sync_role_flags(user)
     validate_user(user, data.get("password"))
     if "password" in data:
         user.set_password(data["password"])
@@ -54,6 +66,17 @@ def create_user(actor, data):
     return user
 
 
+def should_revoke_sessions(user, data, before, old_dealer):
+    dealer_changed = str(user.dealer_id) if user.dealer_id else None
+    demoted_super = before["role"] == UserRole.SUPER_ADMIN and user.role != UserRole.SUPER_ADMIN
+    return (
+        "password" in data
+        or not user.is_active
+        or demoted_super
+        or dealer_changed != old_dealer
+    )
+
+
 @transaction.atomic
 def update_user(actor, user, data):
     user = CustomUser.objects.select_for_update().get(pk=user.pk)
@@ -69,7 +92,7 @@ def update_user(actor, user, data):
     changes["fields"] = sorted(set(data) - {"password"})
     if "password" in data:
         changes["password_changed"] = True
-    if "password" in data or not user.is_active:
+    if should_revoke_sessions(user, data, before, old_dealer):
         user.auth_sessions.filter(revoked_at__isnull=True).update(revoked_at=timezone.now())
     record_audit(actor, "UPDATE", "CUSTOM_USER", user.pk, changes)
     return user
