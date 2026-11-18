@@ -20,8 +20,8 @@ Kevin Assurance provides an integrated, end-to-end digital underwriting portal t
 
 | Metric | Achievement | Description |
 |---|---|---|
-| **Backend Test Suite** | 245+ Passing Tests | Automated test suite covering PostgreSQL 18 and SQLite runtimes |
-| **Frontend Verification** | 46 Automated Checks | Automated browser verification covering auth, wizard, and RBAC flows |
+| **Backend Test Suite** | 277 Passing Tests | Disposable PostgreSQL 18 (`0` skipped) and isolated SQLite (`7` PG-only skipped) |
+| **Frontend Verification** | 92 Automated Checks | Full Playwright verification (`375px` & `1440px`) across auth, wizard, notes, notifications, and RBAC |
 | **Role Hierarchy** | 4 Distinct Personas | Super Admin, Admin (Underwriter), Agent, and Dealer |
 | **Payload Optimization** | ~80% Size Reduction | Client-side HTML5 Canvas compression before network ingestion |
 | **Session Security** | 0 Browser PII Exposure | HttpOnly cookies, CSRF token rotation, zero tokens in localStorage |
@@ -96,9 +96,11 @@ To prevent bandwidth exhaustion and memory limits during mobile field operations
 - Automatically scales high-resolution mobile camera captures to optimized dimensions while preserving text and license plate legibility.
 - Converts uncompressed camera files to optimized JPEG format with measurable size reduction of up to 80% prior to transmission.
 
-### 3. Multi-Tier Underwriting Review Pipeline
-Underwriting workflows support structured collaboration between field agents, underwriters, and administrators:
+### 3. Multi-Tier Underwriting Review, Shared Notes & In-App Notifications
+Underwriting workflows support structured collaboration between dealers, field agents, underwriters, and Super Admins:
 - **Pre-Inspection & Review Notes:** Field agents review submissions from their assigned dealers, flag specific data fields or document defects, and request targeted revisions.
+- **Shared Two-Way Assurance Notes:** Scoped `DEALER` staff, assigned `AGENT`s, `ADMIN` underwriters, and `SUPER_ADMIN` can exchange chronological notes on each application (`GET/POST /api/v1/assurances/{id}/notes/`), backed by active-dealer locks and non-PII `AuditLog` entries.
+- **Transactional In-App Notifications:** Database-backed in-app notifications (`apps/notifications/`) are created atomically with `SUBMIT`, `REQUEST_REVISION`/`REJECT`, `APPROVE`, `REJECT_FINAL`, inspection notes, and shared discussion notes, excluding self-actions and PII, with per-recipient read tracking (`/api/v1/notifications/`).
 - **Revision History:** Dealers view flagged fields and document slots with historical defect notes, updating only necessary items without starting over.
 - **Final Adjudication:** Admin and Super Admin users access a dedicated split-screen inspection viewer showing structured customer data alongside pan-zoom document previews to issue approvals, revision requests, or final rejections.
 
@@ -145,7 +147,9 @@ kevin-assurance/
 |   |   |   |-- models.py          # Core Assurance, Document, and Review models
 |   |   |   |-- serializers.py     # DRF serializers with conditional validation
 |   |   |   |-- views.py           # REST API endpoints and document handlers
+|   |   |   |-- note_views.py      # Shared collaborative assurance note endpoints
 |   |   |   +-- workflow_views.py  # Underwriting and review transition endpoints
+|   |   |-- notifications/         # In-app notification model, recipient resolver, and API
 |   |   +-- users/                 # RBAC: authentication, profile models, CSRF utilities
 |   |       |-- authentication.py  # Cookie-backed JWT authenticator
 |   |       |-- csrf.py            # Origin check and CSRF rotation helpers
@@ -159,9 +163,9 @@ kevin-assurance/
 |   |   |-- components/
 |   |   |   |-- assurances/        # Assurance listing, filters, and summaries
 |   |   |   |-- documents/         # Upload slots, checklist, conditional uploader
-|   |   |   |-- layout/            # Responsive sidebar, navigation, mobile drawer
+|   |   |   |-- layout/            # Responsive sidebar, navigation, notification bell, mobile drawer
 |   |   |   |-- master/            # User, dealer, and assignment management dialogs
-|   |   |   |-- review/            # Split-screen viewer, inspection panel, review progress
+|   |   |   |-- review/            # Split-screen viewer, inspection panel, shared notes, review progress
 |   |   |   |-- shared/            # Data tables, confirm dialogs, feedback badges
 |   |   |   +-- wizard/            # 5-step application wizard and unsaved guards
 |   |   |-- hooks/                 # Custom domain hooks (useInspection, useWizardSession)
@@ -244,16 +248,14 @@ kevin-assurance/
 ## Verification & Automated Test Suites
 
 ### Running Backend Tests
-Execute the full test suite with coverage across all domain modules:
+Execute automated tests via the project's isolated verification runners or Django `manage.py test`:
 ```bash
-cd backend
-python -m pytest apps/assurances/ tests/ --verbose
+python tools/run_open_findings_postgres.py --phase local-check --checks
+python tools/run_backend_remediation.py --phase local-check
 ```
-Or run targeted verification suites:
+Or run targeted SQLite test modules directly from `backend/`:
 ```bash
-python manage.py test apps.assurances.test_inspection
-python manage.py test apps.assurances.test_filters
-python manage.py test apps.users.test_csrf_diagnostics
+python manage.py test apps.assurances.test_notes apps.notifications --settings=core.verification_settings
 ```
 
 ### Running Frontend Checks
