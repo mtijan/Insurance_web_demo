@@ -1,16 +1,30 @@
+from contextlib import suppress
 import logging
 import uuid
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+
+from django.conf import settings
 from django.db import transaction
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework.exceptions import ValidationError
 
-from apps.documents.models import AssuranceDocument
+from apps.documents.models import AssuranceDocument, DocumentType
 from apps.documents.services.vault_paths import resolve_vault_path, StorageUnavailable
 from apps.documents.services.image_validation import verify_decodable_image
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+FORBIDDEN_SUFFIXES = {".exe", ".sh", ".bat", ".php", ".js"}
+MIME_EXTENSIONS = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 logger = logging.getLogger(__name__)
+
+
+def clean_original_filename(raw_name: str) -> str:
+    cleaned = PureWindowsPath(str(raw_name or "")).name.strip()
+    if not cleaned or any(ord(ch) < 32 or ord(ch) == 127 for ch in cleaned):
+        raise ValidationError("Invalid filename.")
+    if len(cleaned) > 255:
+        raise ValidationError("Filename must be 255 characters or fewer.")
+    return cleaned
 
 
 def verify_image_magic_bytes(file_obj: UploadedFile) -> str:
@@ -25,32 +39,35 @@ def verify_image_magic_bytes(file_obj: UploadedFile) -> str:
 
     if header.startswith(b"\xff\xd8\xff"):
         return "image/jpeg"
-    elif header.startswith(b"\x89PNG\r\n\x1a\n"):
+    if header.startswith(b"\x89PNG\r\n\x1a\n"):
         return "image/png"
-    elif len(header) >= 12 and header.startswith(b"RIFF") and header[8:12] == b"WEBP":
+    if len(header) >= 12 and header.startswith(b"RIFF") and header[8:12] == b"WEBP":
         return "image/webp"
 
     raise ValidationError("Invalid file content. Only JPEG, PNG, and WebP images are allowed.")
 
 
-def store_document_to_vault(assurance, doc_type: str, uploaded_file: UploadedFile) -> AssuranceDocument:
+def validate_upload_candidate(doc_type: str, uploaded_file: UploadedFile):
+    if doc_type not in DocumentType.values:
+        raise ValidationError({"document_type": "Invalid document type."})
+    if uploaded_file.size > MAX_FILE_SIZE:
+        raise ValidationError(f"File size exceeds maximum allowed limit of 5 MB ({uploaded_file.size} bytes).")
+    clean_name = clean_original_filename(getattr(uploaded_file, "name", ""))
+    if Path(clean_name).suffix.lower() in FORBIDDEN_SUFFIXES:
+        raise ValidationError("Executable file extensions are forbidden.")
+    mime_type = verify_image_magic_bytes(uploaded_file)
+    verify_decodable_image(uploaded_file)
+    return clean_name, mime_type
+
+
+def store_document_to_vault(assurance, doc_type: str, uploaded_file: UploadedFile, verified=None) -> AssuranceDocument:
     """
     Stores an uploaded physical document into the protected vault.
     Obfuscates the filename using UUIDv4 and records metadata.
     """
-    if uploaded_file.size > MAX_FILE_SIZE:
-        raise ValidationError(f"File size exceeds maximum allowed limit of 5 MB ({uploaded_file.size} bytes).")
-
-    suffix = Path(uploaded_file.name).suffix.lower()
-    if suffix in {".exe", ".sh", ".bat", ".php", ".js"}:
-        raise ValidationError("Executable file extensions are forbidden.")
-    mime_type = verify_image_magic_bytes(uploaded_file)
-    verify_decodable_image(uploaded_file)
-
-    ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}[mime_type]
-
-    obfuscated_name = f"{uuid.uuid4().hex}{ext}"
-    rel_path = str(Path("vault") / str(assurance.id) / obfuscated_name)
+    clean_name, mime_type = verified or validate_upload_candidate(doc_type, uploaded_file)
+    obfuscated_name = f"{uuid.uuid4().hex}{MIME_EXTENSIONS[mime_type]}"
+    rel_path = (Path("vault") / str(assurance.id) / obfuscated_name).as_posix()
     target_path = resolve_vault_path(rel_path)
 
     try:
@@ -60,8 +77,7 @@ def store_document_to_vault(assurance, doc_type: str, uploaded_file: UploadedFil
                 destination.write(chunk)
         return AssuranceDocument.objects.create(
             assurance=assurance, document_type=doc_type, file_path=rel_path,
-            original_filename=uploaded_file.name, file_size=uploaded_file.size,
-            mime_type=mime_type,
+            original_filename=clean_name, file_size=uploaded_file.size, mime_type=mime_type,
         )
     except Exception:
         cleanup_vault_file(rel_path)
@@ -86,4 +102,9 @@ def remove_vault_file(relative):
 
 
 def cleanup_vault_file(relative):
-    resolve_vault_path(relative).unlink(missing_ok=True)
+    target = resolve_vault_path(relative)
+    target.unlink(missing_ok=True)
+    vault_root = (Path(settings.MEDIA_ROOT) / "vault").resolve()
+    if target.parent != vault_root and target.parent.exists():
+        with suppress(OSError):
+            target.parent.rmdir()

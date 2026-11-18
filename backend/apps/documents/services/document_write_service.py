@@ -1,17 +1,19 @@
-
-from django.db import transaction
 import logging
 
-from apps.assurances.models import VehicleAssurance
-from apps.assurances.services.workflow_validation import require_editable, require_mutation_access
-from apps.audit.services.audit_service import record_audit
-from apps.documents.services.vault_service import (
-    delete_document_from_vault, store_document_to_vault, cleanup_vault_file,
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
+
+from apps.assurances.services.workflow_validation import (
+    get_locked_assurance, require_editable, require_mutation_access,
 )
+from apps.audit.services.audit_service import record_audit
 from apps.documents.services.vault_lock import vault_write_lock
 from apps.documents.services.vault_paths import StorageUnavailable
-from rest_framework.exceptions import ValidationError
-from apps.documents.models import DocumentType
+from apps.documents.services.vault_service import (
+    cleanup_vault_file, delete_document_from_vault, store_document_to_vault,
+)
+
+MAX_DOCUMENTS_PER_ASSURANCE = 20
 
 
 def upload_assurance_document(assurance, user, document_type, uploaded_file):
@@ -26,23 +28,29 @@ def compensate(documents):
             logging.getLogger(__name__).error("Vault compensation deferred to explicit recovery.")
 
 
+def persist_documents_batch(assurance, user, items, documents):
+    with transaction.atomic(durable=True):
+        locked = get_locked_assurance(assurance.pk)
+        require_mutation_access(locked, user)
+        require_editable(locked)
+        if locked.documents.count() + len(items) > MAX_DOCUMENTS_PER_ASSURANCE:
+            raise ValidationError(f"Maximum {MAX_DOCUMENTS_PER_ASSURANCE} documents allowed per assurance.")
+        for document_type, uploaded_file in items:
+            document = store_document_to_vault(locked, document_type, uploaded_file)
+            documents.append(document)
+            record_audit(user, "CREATE", "DOCUMENT", document.pk,
+                         {"assurance_id": str(locked.pk), "document_type": document_type})
+
+
 def upload_assurance_documents(assurance, user, items):
-    documents = []
     if not 1 <= len(items) <= 10:
         raise ValidationError("Upload 1-10 documents per batch.")
-    with vault_write_lock():
+    require_mutation_access(assurance, user)
+    require_editable(assurance)
+    documents = []
+    with vault_write_lock(scope=str(assurance.pk), shared=True):
         try:
-            with transaction.atomic(durable=True):
-                assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
-                require_mutation_access(assurance, user)
-                require_editable(assurance)
-                for document_type, uploaded_file in items:
-                    if document_type not in DocumentType.values:
-                        raise ValidationError({"document_type": "Invalid document type."})
-                    document = store_document_to_vault(assurance, document_type, uploaded_file)
-                    documents.append(document)
-                    record_audit(user, "CREATE", "DOCUMENT", document.pk,
-                                 {"assurance_id": str(assurance.pk), "document_type": document_type})
+            persist_documents_batch(assurance, user, items, documents)
         except Exception as exc:
             compensate(documents)
             if isinstance(exc, OSError):
@@ -52,11 +60,11 @@ def upload_assurance_documents(assurance, user, items):
 
 
 def remove_assurance_document(assurance, user, document_id):
-    with vault_write_lock(), transaction.atomic(durable=True):
-        assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
-        require_mutation_access(assurance, user)
-        require_editable(assurance)
-        document = assurance.documents.get(pk=document_id)
+    with vault_write_lock(scope=str(assurance.pk), shared=True), transaction.atomic(durable=True):
+        locked = get_locked_assurance(assurance.pk)
+        require_mutation_access(locked, user)
+        require_editable(locked)
+        document = locked.documents.get(pk=document_id)
         record_audit(user, "DELETE", "DOCUMENT", document.pk,
-                     {"assurance_id": str(assurance.pk), "document_type": document.document_type})
+                     {"assurance_id": str(locked.pk), "document_type": document.document_type})
         delete_document_from_vault(document)

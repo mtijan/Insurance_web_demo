@@ -1,4 +1,5 @@
 """Explicit operator reconciliation, never an automatic retention policy."""
+from contextlib import suppress
 from pathlib import Path
 import re
 from time import time
@@ -18,6 +19,13 @@ def generated_candidate(path, relative):
     return GENERATED_FILE.fullmatch(relative) and not path.is_symlink() and path.is_file()
 
 
+def prune_empty_parent(path, root):
+    vault_root = (root / "vault").resolve()
+    if path.parent != vault_root:
+        with suppress(OSError):
+            path.parent.rmdir()
+
+
 def reconcile_vault(grace_seconds, apply=False):
     if grace_seconds < 0:
         raise ValidationError("Grace period must be nonnegative.")
@@ -27,7 +35,7 @@ def reconcile_vault(grace_seconds, apply=False):
         missing = sum(not resolve_vault_path(value).is_file() for value in references)
         result = {"missing_referenced": missing, "orphan_candidates": 0, "removed": 0,
                   "apply": apply, "grace_seconds": grace_seconds}
-        for path in (root / "vault").glob("*/*"):
+        for path in (root / "vault").glob("[0-9a-f-]*/[0-9a-f]*.*"):
             relative = path.relative_to(root).as_posix()
             if not generated_candidate(path, relative):
                 continue
@@ -37,5 +45,6 @@ def reconcile_vault(grace_seconds, apply=False):
             result["orphan_candidates"] += 1
             if apply:
                 path.unlink()
+                prune_empty_parent(path, root)
                 result["removed"] += 1
         return result
