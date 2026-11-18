@@ -14,8 +14,8 @@ class AssuranceBatchMixin:
         assurance = self.get_object()
         files = request.FILES.getlist("files")
         types = request.data.getlist("document_types")
-        if not files or len(files) != len(types):
-            raise ValidationError("Provide matching files and document_types lists.")
+        if not 1 <= len(files) <= 10 or len(files) != len(types):
+            raise ValidationError("Provide 1-10 matching files and document_types.")
         items = []
         for document_type, file in zip(types, files):
             serializer = DocumentUploadSerializer(data={"document_type": document_type, "file": file})

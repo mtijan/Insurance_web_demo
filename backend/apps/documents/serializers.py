@@ -1,5 +1,16 @@
+from pathlib import PureWindowsPath
+
 from rest_framework import serializers
 from apps.documents.models import AssuranceDocument, DocumentType
+
+
+def normalize_upload_filename(raw_name):
+    cleaned = PureWindowsPath(str(raw_name or "")).name.strip()
+    if not cleaned or any(ord(ch) < 32 or ord(ch) == 127 for ch in cleaned):
+        raise serializers.ValidationError("Invalid filename.")
+    if len(cleaned) > 255:
+        raise serializers.ValidationError("Filename must be 255 characters or fewer.")
+    return cleaned
 
 
 class AssuranceDocumentSerializer(serializers.ModelSerializer):
@@ -31,3 +42,7 @@ class DocumentUploadSerializer(serializers.Serializer):
     """
     document_type = serializers.ChoiceField(choices=DocumentType.choices)
     file = serializers.FileField()
+
+    def validate_file(self, value):
+        value.name = normalize_upload_filename(getattr(value, "name", ""))
+        return value
