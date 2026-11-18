@@ -13,9 +13,16 @@ def required(name):
     return value
 
 
+def required_csv(name):
+    values = [item.strip() for item in required(name).split(",") if item.strip()]
+    if not values:
+        raise ImproperlyConfigured(f"Required production environment list: {name}")
+    return values
+
+
 SECRET_KEY = required("DJANGO_SECRET_KEY")
 DEBUG = False
-ALLOWED_HOSTS = required("DJANGO_ALLOWED_HOSTS").split(",")
+ALLOWED_HOSTS = required_csv("DJANGO_ALLOWED_HOSTS")
 if "*" in ALLOWED_HOSTS or len(SECRET_KEY) < 50:
     raise ImproperlyConfigured("Use explicit allowed hosts and a strong production secret.")
 DATABASES = {"default": {
@@ -26,14 +33,20 @@ DATABASES = {"default": {
 }}
 MEDIA_ROOT = required("KEVIN_MEDIA_ROOT")
 STATIC_ROOT = BASE_DIR / "staticfiles"  # noqa: F405
+ENABLE_AUTH_THROTTLE = True
+REST_FRAMEWORK = {  # noqa: F405
+    **REST_FRAMEWORK,  # noqa: F405
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+}
 AUTH_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-CORS_ALLOWED_ORIGINS = required("DJANGO_TRUSTED_ORIGINS").split(",")
+CORS_ALLOWED_ORIGINS = required_csv("DJANGO_TRUSTED_ORIGINS")
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 if any(not origin.startswith("https://") for origin in CORS_ALLOWED_ORIGINS):
     raise ImproperlyConfigured("Production trusted origins must use HTTPS.")
