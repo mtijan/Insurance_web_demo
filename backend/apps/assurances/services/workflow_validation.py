@@ -1,9 +1,17 @@
 from django.core.exceptions import ValidationError as ModelValidationError
+from django.http import Http404
 from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
 
-from apps.assurances.models import AssuranceStatus, VehicleCategory
+from apps.assurances.models import AssuranceStatus, VehicleAssurance, VehicleCategory
 from apps.documents.services.document_validator import validate_document_completeness
 from apps.documents.services.vault_paths import available_document_types
+
+
+def get_locked_assurance(pk):
+    try:
+        return VehicleAssurance.objects.select_for_update().get(pk=pk)
+    except VehicleAssurance.DoesNotExist as exc:
+        raise Http404("Assurance not found.") from exc
 
 
 class IncompleteDocuments(APIException):
@@ -18,17 +26,24 @@ class IncompleteDocuments(APIException):
         self.detail["success"] = False
 
 
-def require_mutation_access(assurance, user):
-    if not user.is_active:
-        raise PermissionDenied("Inactive account.")
+def has_mutation_dealer_scope(assurance, user):
     if user.is_admin_user:
-        return
-    is_owner = assurance.created_by_id == user.id
+        return True
+    if assurance.created_by_id != user.id:
+        return False
     dealer_access = user.is_dealer and assurance.dealer_id == user.dealer_id
     agent_access = user.is_agent and user.dealer_assignments.filter(
         dealer_id=assurance.dealer_id,
     ).exists()
-    if not (is_owner and (dealer_access or agent_access)):
+    return dealer_access or agent_access
+
+
+def require_mutation_access(assurance, user):
+    if not user.is_active:
+        raise PermissionDenied("Inactive account.")
+    if not assurance.dealer.is_active:
+        raise PermissionDenied("Dealer is inactive.")
+    if not has_mutation_dealer_scope(assurance, user):
         raise PermissionDenied("Only the creator or Admin may change this assurance.")
 
 

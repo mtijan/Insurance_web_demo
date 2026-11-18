@@ -26,6 +26,8 @@ class AssuranceAccessPermission(BasePermission):
     def can_mutate_object(self, user, obj) -> bool:
         if obj.status not in (AssuranceStatus.DRAFT, AssuranceStatus.REVISION):
             return False
+        if not obj.dealer.is_active:
+            return False
         if obj.created_by_id != user.id:
             return False
         return self.has_dealer_scope(user, obj)

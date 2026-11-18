@@ -3,11 +3,12 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.core.exceptions import ValidationError as ModelValidationError
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from apps.assurances.models import AssuranceStatus, PolicyHolder, VehicleAssurance
 from apps.assurances.services.pricing_calculator import calculate_premium
 from apps.assurances.services.workflow_validation import (
+    get_locked_assurance,
     require_delete_draft_access,
     require_draft_deletable,
     require_editable,
@@ -32,6 +33,10 @@ def calculate_end_date(start_date: datetime.date, tenor_years: int) -> datetime.
 
 
 def validate_dealer_access_for_creation(user, dealer):
+    if not user.is_active:
+        raise PermissionDenied("Inactive account.")
+    if not dealer.is_active:
+        raise ValidationError({"dealer_id": "Selected dealer is inactive."})
     if user.is_super_admin or user.is_admin_user:
         return
     if user.is_dealer and user.dealer_id == dealer.id:
@@ -101,14 +106,21 @@ def update_holder(holder, data):
     return holder
 
 
+def cleanup_orphaned_holder(holder_id):
+    holder = PolicyHolder.objects.filter(pk=holder_id).first()
+    if holder is not None and not holder.assurances.exists():
+        holder.delete()
+
+
 @transaction.atomic
 def update_assurance_draft(assurance, user, data):
-    assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
+    assurance = get_locked_assurance(assurance.pk)
     require_mutation_access(assurance, user)
     require_editable(assurance)
     data = validate_draft_input(data)
     if "dealer" in data:
         validate_dealer_access_for_creation(user, data["dealer"])
+    previous_holder_id = assurance.policy_holder_id
     assurance.policy_holder = update_holder(assurance.policy_holder, data)
     for key in ("dealer", "vehicle_category", "vehicle_object", "sum_insured",
                 "coverage_type", "tenor_years", "period_start", "issuance_year"):
@@ -123,6 +135,8 @@ def update_assurance_draft(assurance, user, data):
     assurance.period_end = calculate_end_date(assurance.period_start, assurance.tenor_years)
     validate_draft_fields(vars(assurance), pricing)
     assurance.save()
+    if previous_holder_id and previous_holder_id != assurance.policy_holder_id:
+        cleanup_orphaned_holder(previous_holder_id)
     record_audit(user, "UPDATE", "VEHICLE_ASSURANCE", assurance.pk,
                  {"fields": sorted(data), "status": assurance.status})
     return assurance
@@ -143,12 +157,8 @@ def remove_vault_files(paths):
 
 
 def delete_assurance_draft(assurance, user):
-    with vault_write_lock(), transaction.atomic(durable=True):
-        locked = (
-            VehicleAssurance.objects.select_for_update()
-            .select_related("policy_holder")
-            .get(pk=assurance.pk)
-        )
+    with vault_write_lock(scope=str(assurance.pk), shared=True), transaction.atomic(durable=True):
+        locked = get_locked_assurance(assurance.pk)
         require_delete_draft_access(locked, user)
         require_draft_deletable(locked)
         holder = locked.policy_holder
