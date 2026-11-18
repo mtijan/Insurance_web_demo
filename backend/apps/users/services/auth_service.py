@@ -5,32 +5,39 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from apps.audit.services.audit_service import record_audit
-from apps.users.authentication import require_session
+from apps.users.authentication import enforce_csrf, has_active_dealer_membership, require_session
 from apps.users.models import AuthSession, CustomUser
 
 
 def authenticate_identity(identity, password):
-    candidates = list(CustomUser.objects.filter(
+    candidates = list(CustomUser.objects.select_related("dealer").filter(
         Q(username=identity) | Q(email__iexact=identity),
     )[:2])
     if len(candidates) != 1:
         CustomUser().set_password(password)
         raise ValidationError("Invalid login credentials.")
     user = authenticate(username=candidates[0].username, password=password)
-    if user is None:
+    if user is None or not has_active_dealer_membership(user):
         raise ValidationError("Invalid login credentials.")
     return user
+
+
+def ensure_session_user_active(current, expected_password):
+    if not current.is_active or current.password != expected_password:
+        raise AuthenticationFailed("Account changed. Please log in again.")
+    if not has_active_dealer_membership(current):
+        raise AuthenticationFailed("Dealer account is inactive.")
 
 
 @transaction.atomic
 def issue_session(user):
     current = CustomUser.objects.select_for_update().get(pk=user.pk)
-    if not current.is_active or current.password != user.password:
-        raise AuthenticationFailed("Account changed. Please log in again.")
+    ensure_session_user_active(current, user.password)
     user = current
     refresh = RefreshToken.for_user(user)
     session = AuthSession.objects.create(
@@ -50,6 +57,42 @@ def revoke_session(user, token):
     record_audit(user, "LOGOUT", "CUSTOM_USER", user.pk)
 
 
+def revoke_bearer_logout(request, jwt_auth, header):
+    raw = jwt_auth.get_raw_token(header)
+    if raw is None:
+        raise AuthenticationFailed("Authentication credentials were not provided.")
+    token = jwt_auth.get_validated_token(raw)
+    user = jwt_auth.get_user(token)
+    revoke_session(user, token)
+
+
+def revoke_cookie_logout(request):
+    enforce_csrf(request)
+    candidates = (
+        (request.COOKIES.get("access_token"), AccessToken),
+        (request.COOKIES.get("refresh_token"), RefreshToken),
+    )
+    for raw, token_cls in candidates:
+        if not raw:
+            continue
+        try:
+            token = token_cls(raw)
+            session = require_session(token, token["user_id"])
+        except (TokenError, AuthenticationFailed, KeyError):
+            continue
+        revoke_session(session.user, token)
+        return
+
+
+def perform_logout(request):
+    jwt_auth = JWTAuthentication()
+    header = jwt_auth.get_header(request)
+    if header is not None:
+        revoke_bearer_logout(request, jwt_auth, header)
+    else:
+        revoke_cookie_logout(request)
+
+
 def refresh_access(raw):
     if not isinstance(raw, str) or not raw:
         raise AuthenticationFailed("Invalid refresh token.")
@@ -58,6 +101,6 @@ def refresh_access(raw):
         session = require_session(refresh, refresh["user_id"])
     except (TokenError, KeyError) as exc:
         raise AuthenticationFailed("Invalid refresh token.") from exc
-    if not session.user.is_active:
+    if not session.user.is_active or not has_active_dealer_membership(session.user):
         raise AuthenticationFailed("Inactive account.")
     return str(refresh.access_token)

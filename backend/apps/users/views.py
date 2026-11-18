@@ -7,8 +7,9 @@ from django.conf import settings
 from django.middleware.csrf import get_token
 from apps.users.authentication import enforce_csrf
 from apps.users.cookies import rotate_csrf, set_auth_cookies
-from apps.users.services.auth_service import issue_session, revoke_session, refresh_access
+from apps.users.services.auth_service import issue_session, perform_logout, refresh_access
 from apps.users.services.user_service import create_user, update_user, delete_user
+from apps.users.throttles import AuthScopedRateThrottle
 
 from .models import CustomUser
 from .permissions import IsSuperAdmin
@@ -32,6 +33,8 @@ class CsrfView(APIView):
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_login"
     bearer = False
 
     def post(self, request):
@@ -58,6 +61,8 @@ class TokenLoginView(LoginView):
 class RefreshView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_refresh"
     bearer = False
 
     def get_authenticate_header(self, request):
@@ -81,10 +86,11 @@ class TokenRefreshView(RefreshView):
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
-        revoke_session(request.user, request.auth)
+        perform_logout(request)
         response = Response({"success": True, "message": "Logged out."})
         for name in ("access_token", "refresh_token"):
             response.delete_cookie(name, path="/", samesite=settings.AUTH_COOKIE_SAMESITE)
@@ -100,10 +106,12 @@ class MeView(APIView):
 
     def get(self, request):
         serializer = UserSummarySerializer(request.user)
-        return Response({
+        response = Response({
             "success": True,
             "data": serializer.data
         })
+        response["Cache-Control"] = "private, no-store"
+        return response
 
 
 class UserManagementViewSet(viewsets.ModelViewSet):
@@ -112,6 +120,11 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsSuperAdmin]
     queryset = CustomUser.objects.all().select_related("dealer")
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        response.setdefault("Cache-Control", "private, no-store")
+        return response
 
     def get_serializer_class(self):
         if self.action in ("create", "update", "partial_update"):

@@ -34,12 +34,18 @@ def enforce_csrf(request):
         raise CsrfRejected(reason)
 
 
+def has_active_dealer_membership(user):
+    if not user.is_dealer:
+        return True
+    return bool(user.dealer_id and user.dealer.is_active)
+
+
 def require_session(token, user_id):
     session_id = token.get("sid")
     if not session_id:
         raise AuthenticationFailed("Session expired. Please log in again.")
     try:
-        return AuthSession.objects.get(
+        return AuthSession.objects.select_related("user__dealer").get(
             pk=session_id, user_id=user_id, revoked_at__isnull=True,
             expires_at__gt=timezone.now(),
         )
@@ -56,7 +62,9 @@ class RevocableJWTAuthentication(JWTAuthentication):
             return None
         token = self.get_validated_token(raw)
         user = self.get_user(token)
-        require_session(token, user.pk)
+        session = require_session(token, user.pk)
+        if not has_active_dealer_membership(session.user):
+            raise AuthenticationFailed("Dealer account is inactive.")
         if cookie_auth:
             enforce_csrf(request)
         enforce_password_state(user, request)
