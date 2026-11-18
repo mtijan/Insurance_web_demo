@@ -25,6 +25,8 @@ class AssuranceFeatureTestCase(APITestCase):
             cls.users[role] = CustomUser.objects.create_user(
                 username=f"feature_{role}", email=f"{role}@example.test", role=role,
                 dealer=cls.dealer if role == UserRole.DEALER else None,
+                is_staff=role in (UserRole.SUPER_ADMIN, UserRole.ADMIN),
+                is_superuser=role == UserRole.SUPER_ADMIN,
             )
         cls.owner = cls.users[UserRole.DEALER]
         cls.admin = cls.users[UserRole.ADMIN]
