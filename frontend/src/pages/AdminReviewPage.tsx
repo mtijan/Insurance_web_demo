@@ -1,7 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useResource } from '../hooks/useResource'
-import { safeBackTarget } from '../utils/roleLabels'
+import { isUuidParam, safeBackTarget } from '../utils/roleLabels'
 import type { AssuranceDetail } from '../types/assurance'
 import { Feedback } from '../components/shared/Feedback'
 import { SplitScreenViewer } from '../components/review/SplitScreenViewer'
@@ -11,11 +11,13 @@ import { ReviewProgress } from '../components/review/ReviewProgress'
 import { InspectionPanel } from '../components/review/InspectionPanel'
 import { useInspection } from '../hooks/useInspection'
 import { ApplicationOverview } from '../components/assurances/ApplicationOverview'
+import { AssuranceNotesPanel } from '../components/review/AssuranceNotesPanel'
 import { ReviewHistory } from '../components/review/ReviewHistory'
 
 export function AdminReviewPage() {
   const { id } = useParams()
-  return <ReviewWorkspace key={id} id={id!} />
+  if (!isUuidParam(id)) return <section className="panel" role="alert"><h1>Verifikasi pengajuan</h1><p>ID pengajuan tidak valid.</p></section>
+  return <ReviewWorkspace key={id} id={id} />
 }
 function ReviewWorkspace({ id }: { id: string }) {
   const { state } = useLocation()
@@ -31,6 +33,7 @@ function ReviewWorkspace({ id }: { id: string }) {
       {resource.data.status === 'SUBMITTED' && <ReviewActions review={review} />}
       <ReviewProgress detail={resource.data} /><SplitScreenViewer detail={resource.data} />
       {resource.data.status === 'SUBMITTED' ? <InspectionPanel detail={resource.data} admin review={inspection} /> : <p className="notice">Keputusan hanya dapat dibuat ketika pengajuan sedang diajukan. Status saat ini: {resource.data.status}.</p>}
+      <AssuranceNotesPanel detail={resource.data} />
       <ReviewHistory detail={resource.data} /></>}
   </section>
 }

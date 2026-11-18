@@ -12,13 +12,15 @@ import { ReviewProgress } from '../components/review/ReviewProgress'
 import { useInspection } from '../hooks/useInspection'
 import { ApplicationOverview } from '../components/assurances/ApplicationOverview'
 import { ReviewHistory } from '../components/review/ReviewHistory'
+import { AssuranceNotesPanel } from '../components/review/AssuranceNotesPanel'
 import { DocumentPreviewProvider } from '../components/documents/DocumentPreviewProvider'
 import { DraftDeleteAction } from '../components/assurances/DraftDeleteAction'
-import { assuranceReturnLabel, assuranceReturnPath, safeBackTarget } from '../utils/roleLabels'
+import { assuranceReturnLabel, assuranceReturnPath, isUuidParam, safeBackTarget } from '../utils/roleLabels'
 
 export function AssuranceDetailPage() {
   const { id } = useParams()
-  return <DocumentPreviewProvider key={id}><DetailWorkspace id={id!} /></DocumentPreviewProvider>
+  if (!isUuidParam(id)) return <section className="panel" role="alert"><h1>Detail pengajuan</h1><p>ID pengajuan tidak valid.</p></section>
+  return <DocumentPreviewProvider key={id}><DetailWorkspace id={id} /></DocumentPreviewProvider>
 }
 function DetailWorkspace({ id }: { id: string }) {
   const { user } = useAuth()
@@ -40,6 +42,7 @@ function DetailWorkspace({ id }: { id: string }) {
       <h2>Berkas pengajuan</h2><p>JPEG, PNG, atau WebP maksimal 5 MiB per berkas.</p>
       {!current.can_edit && <p>Dokumen hanya dapat dibaca pada akun atau status ini.</p>}
       <DocumentSlots detail={current} reload={resource.reload} />
+      <AssuranceNotesPanel detail={current} />
       <ReviewHistory detail={current} />
     </>}
   </section>
