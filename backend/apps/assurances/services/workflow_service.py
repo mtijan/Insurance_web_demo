@@ -5,11 +5,20 @@ from apps.assurances.models import (
     AssuranceNumberSequence, AssuranceStatus, VehicleAssurance,
 )
 from apps.assurances.services.workflow_validation import (
-    require_editable, require_mutation_access, validate_submission_data,
+    get_locked_assurance, require_editable, require_mutation_access, validate_submission_data,
 )
 from apps.assurances.workflow_serializers import ReviewAssuranceSerializer
 from apps.audit.services.audit_service import record_audit
 from apps.assurances.services.inspection_service import append_review_event
+from apps.notifications.models import NotificationEventType
+from apps.notifications.services.notification_service import dispatch_assurance_notifications
+
+_REVIEW_NOTIFICATION_EVENTS = {
+    "APPROVE": NotificationEventType.ASSURANCE_APPROVED,
+    "REJECT_FINAL": NotificationEventType.ASSURANCE_REJECTED,
+    "REQUEST_REVISION": NotificationEventType.REVISION_REQUESTED,
+    "REJECT": NotificationEventType.REVISION_REQUESTED,
+}
 
 
 def next_assurance_number(year):
@@ -32,7 +41,7 @@ def existing_number_maximum(year):
 
 @transaction.atomic
 def submit_assurance_application(assurance, user):
-    assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
+    assurance = get_locked_assurance(assurance.pk)
     require_mutation_access(assurance, user)
     require_editable(assurance)
     validate_submission_data(assurance)
@@ -43,9 +52,15 @@ def submit_assurance_application(assurance, user):
     assurance.save(update_fields=["status", "verification_stage", "data_verified",
                                   "documents_verified", "updated_at"])
     append_review_event(assurance, user, "SUBMIT")
-    record_audit(user, "SUBMIT", "VEHICLE_ASSURANCE", assurance.pk, {
+    audit = record_audit(user, "SUBMIT", "VEHICLE_ASSURANCE", assurance.pk, {
         "status": {"old": previous_status, "new": assurance.status},
     })
+    dispatch_assurance_notifications(
+        assurance=assurance,
+        actor=user,
+        event_type=NotificationEventType.ASSURANCE_SUBMITTED,
+        dedupe_key=f"submit:{assurance.pk}:{audit.pk}",
+    )
     return assurance
 
 
@@ -57,7 +72,7 @@ def review_assurance(assurance, user, data):
     serializer.is_valid(raise_exception=True)
     decision = serializer.validated_data["decision"]
     notes = serializer.validated_data["review_notes"]
-    assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
+    assurance = get_locked_assurance(assurance.pk)
     if assurance.status != AssuranceStatus.SUBMITTED:
         raise ValidationError("Only SUBMITTED assurances may be reviewed.")
     if decision == "APPROVE":
@@ -76,8 +91,16 @@ def review_assurance(assurance, user, data):
                                   "reviewed_by", "verification_stage", "data_verified",
                                   "documents_verified", "updated_at"])
     append_review_event(assurance, user, decision, notes=notes)
-    record_audit(user, decision, "VEHICLE_ASSURANCE", assurance.pk, {
+    audit = record_audit(user, decision, "VEHICLE_ASSURANCE", assurance.pk, {
         "status": {"old": AssuranceStatus.SUBMITTED, "new": assurance.status},
         "review_notes_present": bool(notes), "assurance_number": assurance.assurance_number,
     })
+    notif_event = _REVIEW_NOTIFICATION_EVENTS.get(decision)
+    if notif_event:
+        dispatch_assurance_notifications(
+            assurance=assurance,
+            actor=user,
+            event_type=notif_event,
+            dedupe_key=f"review:{assurance.pk}:{audit.pk}",
+        )
     return assurance

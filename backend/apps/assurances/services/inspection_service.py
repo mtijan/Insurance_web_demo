@@ -1,9 +1,17 @@
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from apps.assurances.models import AssuranceReviewEvent, AssuranceStatus, VehicleAssurance
+from apps.assurances.models import AssuranceReviewEvent, AssuranceStatus
+from apps.assurances.services.workflow_validation import get_locked_assurance
 from apps.assurances.workflow_serializers import InspectionSerializer
 from apps.audit.services.audit_service import record_audit
+from apps.notifications.models import NotificationEventType
+from apps.notifications.services.notification_service import dispatch_assurance_notifications
+
+_INSPECTION_NOTIFICATION_EVENTS = {
+    "REQUEST_REVISION": NotificationEventType.REVISION_REQUESTED,
+    "NOTE": NotificationEventType.ASSURANCE_NOTE,
+}
 
 
 def require_inspection_access(assurance, user):
@@ -39,7 +47,7 @@ def apply_verification(assurance, action, section):
 
 @transaction.atomic
 def inspect_assurance(assurance, user, data):
-    assurance = VehicleAssurance.objects.select_for_update().get(pk=assurance.pk)
+    assurance = get_locked_assurance(assurance.pk)
     require_inspection_access(assurance, user)
     serializer = InspectionSerializer(data=data)
     serializer.is_valid(raise_exception=True)
@@ -58,8 +66,17 @@ def inspect_assurance(assurance, user, data):
     assurance.save(update_fields=["verification_stage", "data_verified", "documents_verified",
                                   "status", "review_notes", "reviewed_by", "updated_at"])
     append_review_event(assurance, user, action, section, notes)
-    record_audit(user, "INSPECT", "VEHICLE_ASSURANCE", assurance.pk, {
+    audit = record_audit(user, "INSPECT", "VEHICLE_ASSURANCE", assurance.pk, {
         "action": action, "section": section, "status": assurance.status,
         "review_notes_present": bool(notes),
     })
+    notif_event = _INSPECTION_NOTIFICATION_EVENTS.get(action)
+    if notif_event:
+        dispatch_assurance_notifications(
+            assurance=assurance,
+            actor=user,
+            event_type=notif_event,
+            section=section,
+            dedupe_key=f"inspect:{assurance.pk}:{audit.pk}",
+        )
     return assurance

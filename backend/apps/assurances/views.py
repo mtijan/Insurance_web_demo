@@ -23,6 +23,7 @@ from apps.assurances.services.assurance_service import (
 from apps.assurances.services.pricing_calculator import calculate_premium
 from apps.assurances.workflow_views import AssuranceWorkflowMixin
 from apps.assurances.document_batch_views import AssuranceBatchMixin
+from apps.assurances.note_views import AssuranceNoteMixin
 from apps.configs.services.config_service import get_admin_fee
 from apps.documents.models import AssuranceDocument
 from apps.documents.serializers import (
@@ -35,7 +36,7 @@ from apps.documents.services.document_write_service import (
 )
 
 
-class AssuranceViewSet(AssuranceBatchMixin, AssuranceWorkflowMixin, viewsets.ModelViewSet):
+class AssuranceViewSet(AssuranceNoteMixin, AssuranceBatchMixin, AssuranceWorkflowMixin, viewsets.ModelViewSet):
     """
     ViewSet for vehicle assurance management:
     - List/Retrieve scoped by user role.
