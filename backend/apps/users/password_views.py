@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.users.services.password_service import change_own_password
+from apps.users.throttles import AuthScopedRateThrottle
 
 
 class PasswordChangeSerializer(serializers.Serializer):
@@ -20,6 +21,8 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_password"
 
     def post(self, request):
         serializer = PasswordChangeSerializer(data=request.data)
