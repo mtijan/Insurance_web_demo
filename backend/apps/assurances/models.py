@@ -173,3 +173,24 @@ class AssuranceReviewEvent(models.Model):
     class Meta:
         db_table = "assurance_review_event"
         ordering = ["created_at", "id"]
+
+
+class AssuranceNote(models.Model):
+    """Shared collaborative note thread visible and writable within assurance scope."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    assurance = models.ForeignKey(VehicleAssurance, on_delete=models.CASCADE,
+                                  related_name="notes")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                               related_name="assurance_notes")
+    author_role = models.CharField(max_length=20)
+    author_username = models.CharField(max_length=150)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "assurance_note"
+        ordering = ["created_at", "id"]
+        indexes = [
+            models.Index(fields=["assurance", "created_at", "id"], name="assurance_note_thread_idx"),
+        ]
