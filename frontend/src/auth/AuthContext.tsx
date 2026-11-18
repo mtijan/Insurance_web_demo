@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useAuthBootstrap(setUser, reload, clear)
   async function login(username: string, password: string) {
     pending.current?.abort()
+    setError('')
     const response = await api.post('auth/login/', { username, password })
     setUser(response.data.data.user)
   }

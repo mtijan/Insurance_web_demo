@@ -5,11 +5,12 @@ import { Feedback } from '../components/shared/Feedback'
 import { AssuranceWizard } from '../components/wizard/AssuranceWizard'
 import { useAuth } from '../auth/authState'
 import type { Dealer } from '../types/dealer'
-import { isWorkspaceRole } from '../utils/roleLabels'
+import { isUuidParam, isWorkspaceRole } from '../utils/roleLabels'
 
 export function AssuranceFormPage() {
   const { id } = useParams()
   const { user } = useAuth()
+  if (id !== undefined && !isUuidParam(id)) return <section className="panel" role="alert"><h1>Pengajuan jaminan</h1><p>ID pengajuan tidak valid.</p></section>
   if (user?.role === 'DEALER') return <AccountDealerForm key={`${user.id}:${id ?? 'new'}`} id={id} />
   if (isWorkspaceRole(user?.role)) return id ? <ExistingDraft key={id} id={id} bindDealer /> : <WorkspaceDealerForm key={user?.id} />
   if (id) return <ExistingDraft key={id} id={id} />

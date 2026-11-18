@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useAuth } from '../auth/authState'
 import { api, errorMessage } from '../services/apiClient'
 import { DataTable } from '../components/shared/DataTable'
 import { Feedback } from '../components/shared/Feedback'
 
 interface Entry { id: string; action: string; entity_name: string; entity_id: string; created_at: string }
 export function AuditPage() {
+  const { user } = useAuth()
+  return <AuditWorkspace key={user?.id} />
+}
+function AuditWorkspace() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [page, setPage] = useState(1)
   const [next, setNext] = useState(false)
