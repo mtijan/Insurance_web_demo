@@ -62,6 +62,7 @@ class AssuranceWorkflowMixin:
         filename = f"Rekapitulasi_Jaminan_Kevin_Assurance_{timezone.localdate():%Y%m%d}.xlsx"
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         response["Cache-Control"] = "no-store"
+        response["X-Content-Type-Options"] = "nosniff"
         return response
 
     def filter_queryset(self, queryset):

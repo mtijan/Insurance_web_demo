@@ -1,6 +1,7 @@
 """Factual ACTIVE summary; no benefit wording, identity scans or raw NIK."""
 from io import BytesIO
 from pathlib import Path
+import re
 from xml.sax.saxutils import escape
 
 import reportlab
@@ -13,7 +14,9 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from rest_framework.exceptions import ValidationError, APIException
+from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
+
+XML_CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 from apps.assurances.selectors.assurance_selector import get_assurances_for_user
 from apps.audit.services.audit_service import record_audit
@@ -53,15 +56,24 @@ def summary_rows(assurance):
     ]
 
 
+def sanitize_pdf_text(value):
+    return XML_CONTROL_RE.sub("", str(value or ""))
+
+
+def validate_pdf_glyphs(sanitized_rows, style):
+    glyphs = pdfmetrics.getFont(style.fontName).face.charToGlyph
+    values = [value for row in sanitized_rows for value in row]
+    if any(ord(char) not in glyphs for value in values for char in value if not char.isspace()):
+        raise PDFUnavailable()
+
+
 def render_summary(assurance):
     buffer = BytesIO()
     style = summary_style()
-    glyphs = pdfmetrics.getFont(style.fontName).face.charToGlyph
-    values = [str(value) for row in summary_rows(assurance) for value in row]
-    if any(ord(char) not in glyphs for value in values for char in value if not char.isspace()):
-        raise PDFUnavailable()
-    paragraph = lambda value: Paragraph(escape(str(value or "")), style)
-    rows = [[paragraph(key), paragraph(value)] for key, value in summary_rows(assurance)]
+    sanitized_rows = [(sanitize_pdf_text(k), sanitize_pdf_text(v)) for k, v in summary_rows(assurance)]
+    validate_pdf_glyphs(sanitized_rows, style)
+    paragraph = lambda value: Paragraph(escape(value), style)
+    rows = [[paragraph(key), paragraph(value)] for key, value in sanitized_rows]
     table = Table(rows, colWidths=[160, 339], hAlign="LEFT")
     table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
@@ -76,7 +88,9 @@ def render_summary(assurance):
 
 @transaction.atomic
 def export_summary_pdf(user, assurance_id):
-    assurance = get_assurances_for_user(user).filter(pk=assurance_id).first()
+    if not (user and user.is_authenticated and user.is_active):
+        raise PermissionDenied("Inactive account.")
+    assurance = get_assurances_for_user(user).prefetch_related(None).filter(pk=assurance_id).first()
     if assurance is None:
         raise Http404("Assurance not found.")
     if assurance.status != "ACTIVE" or not assurance.assurance_number:

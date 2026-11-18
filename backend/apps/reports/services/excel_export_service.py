@@ -44,6 +44,8 @@ def export_assurances_excel(user, queryset=None):
     sheet = workbook.create_sheet("Rekapitulasi Jaminan")
     sheet.append(HEADERS)
     records = queryset if queryset is not None else get_assurances_for_user(user)
+    if hasattr(records, "prefetch_related"):
+        records = records.prefetch_related(None)
     count = 0
     for assurance in records.iterator(chunk_size=500):
         sheet.append(safe_cells(sheet, export_row(assurance)))

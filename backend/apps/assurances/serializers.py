@@ -47,7 +47,7 @@ class AssuranceDraftCreateSerializer(serializers.Serializer):
     policy_holder_name = serializers.CharField(max_length=100)
     policy_holder_nik = serializers.CharField(max_length=16, validators=[nik_validator])
     policy_holder_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
-    policy_holder_address = serializers.CharField(required=False, allow_blank=True)
+    policy_holder_address = serializers.CharField(max_length=1000, required=False, allow_blank=True)
     dealer_id = serializers.PrimaryKeyRelatedField(
         queryset=Dealer.objects.filter(is_active=True),
         source="dealer"
@@ -186,12 +186,19 @@ class AssuranceDetailSerializer(serializers.ModelSerializer):
     def get_can_delete_draft(self, obj) -> bool:
         return compute_can_delete_draft(obj, self.context.get("request"))
 
+    def get_available_types(self, obj: VehicleAssurance):
+        cache = getattr(self, "_doc_types_cache", None)
+        if cache is None:
+            cache = {}
+            self._doc_types_cache = cache
+        if obj.pk not in cache:
+            cache[obj.pk] = available_document_types(obj)
+        return cache[obj.pk]
+
     def get_is_documents_complete(self, obj: VehicleAssurance) -> bool:
-        uploaded_types = available_document_types(obj)
-        complete, _ = validate_document_completeness(obj.vehicle_category, uploaded_types)
+        complete, _ = validate_document_completeness(obj.vehicle_category, self.get_available_types(obj))
         return complete
 
     def get_missing_documents(self, obj: VehicleAssurance) -> list:
-        uploaded_types = available_document_types(obj)
-        _, missing = validate_document_completeness(obj.vehicle_category, uploaded_types)
+        _, missing = validate_document_completeness(obj.vehicle_category, self.get_available_types(obj))
         return missing
