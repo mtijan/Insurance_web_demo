@@ -5,6 +5,10 @@ backend/venv/
 *.sqlite3
 *.sqlite3-*
 backend/media/
+backend/staticfiles/
+*.pem
+*.key
+credentials.json
 .verification-*/
 .env
 .env*
