@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.configs",
     "apps.reports",
+    "apps.notifications",
 ]
 
 AUTH_USER_MODEL = "users.CustomUser"
@@ -113,8 +114,13 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 # Media Files & Protected Storage Vault
-MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+DATA_UPLOAD_MAX_NUMBER_FILES = 10
+FILE_UPLOAD_HANDLERS = [
+    "apps.documents.upload_handlers.BoundedUploadGuardHandler",
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -135,10 +141,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_login": "20/min",
+        "auth_refresh": "60/min",
+        "auth_password": "10/min",
+    },
 }
 
 # Development defaults; production overrides are mandatory for deployment.
+ENABLE_AUTH_THROTTLE = False
 AUTH_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = True
 AUTH_COOKIE_SAMESITE = "Lax"
 SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
               "REFRESH_TOKEN_LIFETIME": timedelta(days=1)}
