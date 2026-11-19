@@ -5,6 +5,7 @@ import { useAuth } from './auth/authState'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { isWorkspaceRole } from './utils/roleLabels'
 import { AppLayout } from './components/layout/AppLayout'
+import { BrandMark } from './components/layout/BrandMark'
 import { AuthBackdrop } from './components/auth/AuthBackdrop'
 import { LoginPage } from './pages/LoginPage'
 import { AssurancesPage } from './pages/AssurancesPage'
@@ -27,7 +28,14 @@ function Root() {
   </AuthProvider>
 }
 function AuthLayout() {
-  return <div className="auth-page"><header className="brand">Kevin Assurance <span>Pengelolaan jaminan kendaraan</span></header><AuthBackdrop /><main id="main" tabIndex={-1}><Outlet /></main></div>
+  return <div className="auth-page">
+    <header className="brand">
+      <BrandMark />
+      <div>Kevin Assurance<span>Pengelolaan jaminan kendaraan</span></div>
+    </header>
+    <AuthBackdrop />
+    <main id="main" tabIndex={-1}><Outlet /></main>
+  </div>
 }
 function HomeRoute() {
   const { user } = useAuth()

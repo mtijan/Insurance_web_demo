@@ -51,6 +51,9 @@
 body { margin: 0; background: var(--canvas); color: var(--text); }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: linear-gradient(90deg, #5A0E20 0%, #3E0815 100%);
   color: white;
   padding: 1.25rem max(1rem, calc((100% - 1200px) / 2));
@@ -59,6 +62,7 @@ body { margin: 0; background: var(--canvas); color: var(--text); }
   letter-spacing: -0.02em;
   border-bottom: 1px solid rgba(255, 228, 232, 0.15);
 }
+.brand-mark { display: block; flex: none; max-width: none; }
 .brand span { display: block; font-size: .875rem; font-weight: 400; color: var(--sidebar-muted); }
 
 main { max-width: 1200px; margin: auto; padding: 1.75rem 1.25rem 4rem; }

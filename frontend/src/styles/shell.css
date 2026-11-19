@@ -3,7 +3,6 @@
 .desktop-sidebar { background:linear-gradient(180deg, #5A0E20 0%, #430816 56%, #2B040D 100%); color:var(--sidebar-text); height:100dvh; position:sticky; top:0; display:flex; flex-direction:column; padding:20px 14px; overflow-y:auto; border-right:1px solid rgba(255,228,232,0.14); box-shadow:4px 0 24px -10px rgba(43,4,13,0.45); }
 .sidebar-brand { display:flex; gap:12px; align-items:center; margin-bottom:22px; padding:10px; border-radius:12px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,228,232,0.14); }
 .app-shell.collapsed .sidebar-brand { justify-content:center; padding:8px; }
-.sidebar-brand>span { width:40px; height:40px; flex-shrink:0; background:linear-gradient(135deg, #BE123C 0%, #881337 100%); color:#FFFFFF; border:1px solid rgba(255,228,232,0.4); border-radius:10px; display:grid; place-items:center; font-weight:800; font-size:16px; letter-spacing:-0.02em; box-shadow:0 6px 14px -3px rgba(20,2,6,0.55); }
 .sidebar-brand strong { line-height:1.25; font-weight:700; color:#FFFFFF; letter-spacing:-0.01em; font-size:15px; }
 .sidebar-brand small,.sidebar-footer small { display:block; font-weight:500; font-size:11.5px; color:var(--sidebar-muted); }
 .desktop-sidebar nav,.mobile-drawer nav { display:grid; gap:14px; }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/authState'
+import { BrandMark } from './BrandMark'
 import { navigationFor } from './navigation'
 import { LogoutButton } from './LogoutButton'
 
@@ -11,7 +12,10 @@ export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: bool
   const items = user ? navigationFor(user.role) : []
   const initials = (user?.username ?? 'KA').slice(0, 2).toUpperCase()
   return <>
-    <div className="sidebar-brand" aria-label="Kevin Assurance"><span aria-hidden="true">KA</span>{!collapsed && <strong>Kevin Assurance<small>Jaminan kendaraan</small></strong>}</div>
+    <div className="sidebar-brand">
+      <BrandMark alt={collapsed ? 'Kevin Assurance' : ''} />
+      {!collapsed && <strong>Kevin Assurance<small>Jaminan kendaraan</small></strong>}
+    </div>
     <nav aria-label="Navigasi utama">
       {['Operasional', 'Master data', 'Administrasi'].filter(group => items.some(item => item.group === group)).map(group => <section className="nav-section" key={group} aria-label={group}>
         <h2 className={collapsed ? 'sr-only' : 'nav-group'}>{group}</h2>
